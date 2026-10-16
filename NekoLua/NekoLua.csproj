@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net481</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MoonSharp" Version="2.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="Northwood.LabAPI" Version="1.1.7" />
+		<PackageReference Include="NVorbis" Version="0.10.5" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Properties\Resources\EmbeddedLua\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Properties\Resource\EmbeddedLua\*.lua">
+			<LogicalName>NekoLua.EmbeddedLua.%(Filename)%(Extension)</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="Assembly-CSharp-firstpass">
+	    <HintPath>..\Libraries\Assembly-CSharp-firstpass.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Assembly-CSharp">
+	    <HintPath>..\Libraries\Assembly-CSharp-Publicized.dll</HintPath>
+	  </Reference>
+	  <Reference Include="CommandSystem.Core">
+	    <HintPath>..\Libraries\CommandSystem.Core.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Mirror">
+	    <HintPath>..\Libraries\Mirror-Publicized.dll</HintPath>
+	  </Reference>
+	  <Reference Include="NorthwoodLib">
+	    <HintPath>..\Libraries\NorthwoodLib.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Pooling">
+	    <HintPath>..\Libraries\Pooling.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine">
+	    <HintPath>..\Libraries\UnityEngine.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine.AnimationModule">
+	    <HintPath>..\Libraries\UnityEngine.AnimationModule.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine.CoreModule">
+	    <HintPath>..\Libraries\UnityEngine.CoreModule.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine.PhysicsModule">
+	    <HintPath>..\Libraries\UnityEngine.PhysicsModule.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+</Project>
