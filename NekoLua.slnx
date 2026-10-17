@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="NekoLua.SecretLabNAudioProxy/NekoLua.SecretLabNAudioProxy.csproj" />
+  <Project Path="NekoLua/NekoLua.csproj" />
+</Solution>

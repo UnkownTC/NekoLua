@@ -1,12 +1,11 @@
 using LabApi.Features.Wrappers;
 
 using MoonSharp.Interpreter;
-
-using NekoLua.Dependencies;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
-namespace NekoLua.Proxies.GameContents;
+namespace NekoLua.Proxies.Game;
 
 /// <summary>
 /// player 表：
@@ -19,7 +18,7 @@ namespace NekoLua.Proxies.GameContents;
 ///   isAlive / isSCP / isHuman / inventory / currentItem
 ///   及 Player 类的全部 public 成员
 /// </summary>
-public class LuaPlayerProxy : IRegisterLua
+internal class LuaPlayerProxy : IRegisterLua
 {
     public string Name { get; } = "player";
 

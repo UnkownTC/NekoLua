@@ -16,7 +16,7 @@ namespace NekoLua.Proxies;
 /// errTable = { message, trace, type }
 ///   type: "syntax" / "runtime" / "interpreter" / "unknown"
 /// </summary>
-public class LuaTryCatchFinallyProxy : IRegisterLua
+internal class LuaTryCatchFinallyProxy : IRegisterLua
 {
     public string Name { get; } = "try";
     public Table Create(LuaModInstance mod)

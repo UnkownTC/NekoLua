@@ -4,8 +4,7 @@ using System.Text;
 using LabApi.Features.Console;
 
 using MoonSharp.Interpreter;
-
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -20,7 +19,7 @@ namespace NekoLua.Proxies.Net;
 ///   c:close()
 ///   c.isOpen / c.isClosed
 /// </summary>
-public class LuaUdpProxy : IRegisterLua
+internal class LuaUdpProxy : IRegisterLua
 {
     public string Name { get; } = "udp";
     public Table Create(LuaModInstance mod)

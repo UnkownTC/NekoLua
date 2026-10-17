@@ -1,8 +1,7 @@
-using System.Text;
-
 using MoonSharp.Interpreter;
 using NekoLua.Loader;
 using NekoLua.Registers;
+using System.Text;
 
 namespace NekoLua.Proxies.Text;
 
@@ -12,7 +11,7 @@ namespace NekoLua.Proxies.Text;
 ///   base64.urlEncode / urlDecode(str)  -- URL-safe（-_，无 padding）
 ///   base64.isValid(str)             -> bool
 /// </summary>
-public class LuaBase64Proxy : IRegisterLua
+internal class LuaBase64Proxy : IRegisterLua
 {
     public string Name { get; } = "base64";
     public Table Create(LuaModInstance mod)
@@ -81,13 +80,13 @@ public class LuaBase64Proxy : IRegisterLua
     }
     static string ArgString(CallbackArguments args, int index, string sig)
     {
-        if (args.Count <= index || args[index].Type != DataType.String)
-            throw new ScriptRuntimeException(sig);
-
-        return args[index].String;
+        return args.Count <= index || args[index].Type != DataType.String ? throw new ScriptRuntimeException(sig) : args[index].String;
     }
     static string ToUrlSafe(string b64)
-        => b64.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    {
+        return b64.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    }
+
     static string FromUrlSafe(string urlSafe)
     {
         var s = urlSafe.Replace('-', '+').Replace('_', '/');

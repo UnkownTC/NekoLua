@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -11,7 +11,7 @@ namespace NekoLua.Proxies.Threading;
 ///   async.wait(seconds)             -- 只能在协程里调，让出
 ///   async.count()                   -- 本 mod 活跃协程数
 /// </summary>
-public class LuaAsyncProxy : IRegisterLua
+internal class LuaAsyncProxy : IRegisterLua
 {
     public string Name { get; } = "async";
     public Table Create(LuaModInstance mod)

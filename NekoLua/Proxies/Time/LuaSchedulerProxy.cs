@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -12,7 +12,7 @@ namespace NekoLua.Proxies.Time;
 ///   scheduler.at("2026-10-01 12:00:00", [id], callback)
 ///   scheduler.cancel(id) / cancelAll() / count()
 /// </summary>
-public class LuaSchedulerProxy : IRegisterLua
+internal class LuaSchedulerProxy : IRegisterLua
 {
     public string Name { get; } = "scheduler";
     public Table Create(LuaModInstance mod)

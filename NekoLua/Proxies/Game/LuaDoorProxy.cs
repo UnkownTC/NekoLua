@@ -6,7 +6,7 @@ using LabApi.Features.Wrappers;
 using MapGeneration;
 
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -21,7 +21,7 @@ namespace NekoLua.Proxies.Game;
 ///      isSpawned / isDestroyed / isPrefab / position（读写）/ rotation（读写）
 /// 方法：p:destroy() / spawn()
 /// </summary>
-public class LuaDoorProxy : IRegisterLua
+internal class LuaDoorProxy : IRegisterLua
 {
     public string Name { get; } = "door";
     public Table Create(LuaModInstance mod)

@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -16,7 +16,7 @@ namespace NekoLua.Proxies.Numerics;
 ///         clampMagnitude / project / reflect
 ///   分量：x(v) / y(v) / z(v)
 /// </summary>
-public class LuaVector3Proxy : IRegisterLua
+internal class LuaVector3Proxy : IRegisterLua
 {
     public string Name { get; } = "vector3";
 
@@ -29,20 +29,20 @@ public class LuaVector3Proxy : IRegisterLua
         {
             return a.Count < 3
                 ? throw new ScriptRuntimeException("vector3.new(x, y, z)")
-                : DynValue.NewTable(LuaVector.PackV3(s, new Vector3(
+                : DynValue.NewTable(LuaVector.PackVector3(s, new Vector3(
                 (float)a[0].Number,
                 (float)a[1].Number,
                 (float)a[2].Number)));
         });
 
-        t["zero"] = DynValue.NewTable(LuaVector.PackV3(s, Vector3.zero));
-        t["one"] = DynValue.NewTable(LuaVector.PackV3(s, Vector3.one));
-        t["up"] = DynValue.NewTable(LuaVector.PackV3(s, Vector3.up));
-        t["down"] = DynValue.NewTable(LuaVector.PackV3(s, Vector3.down));
-        t["left"] = DynValue.NewTable(LuaVector.PackV3(s, Vector3.left));
-        t["right"] = DynValue.NewTable(LuaVector.PackV3(s, Vector3.right));
-        t["forward"] = DynValue.NewTable(LuaVector.PackV3(s, Vector3.forward));
-        t["back"] = DynValue.NewTable(LuaVector.PackV3(s, Vector3.back));
+        t["zero"] = DynValue.NewTable(LuaVector.PackVector3(s, Vector3.zero));
+        t["one"] = DynValue.NewTable(LuaVector.PackVector3(s, Vector3.one));
+        t["up"] = DynValue.NewTable(LuaVector.PackVector3(s, Vector3.up));
+        t["down"] = DynValue.NewTable(LuaVector.PackVector3(s, Vector3.down));
+        t["left"] = DynValue.NewTable(LuaVector.PackVector3(s, Vector3.left));
+        t["right"] = DynValue.NewTable(LuaVector.PackVector3(s, Vector3.right));
+        t["forward"] = DynValue.NewTable(LuaVector.PackVector3(s, Vector3.forward));
+        t["back"] = DynValue.NewTable(LuaVector.PackVector3(s, Vector3.back));
 
         t["add"] = Bin(s, (x, y) => x + y, "vector3.add(a, b)");
         t["sub"] = Bin(s, (x, y) => x - y, "vector3.sub(a, b)");
@@ -50,85 +50,85 @@ public class LuaVector3Proxy : IRegisterLua
 
         t["mul"] = DynValue.NewCallback((_, a) =>
         {
-            var v = LuaVector.UnpackV3(a, 0, "vector3.mul(a, k)");
+            var v = LuaVector.UnpackVector3(a, 0, "vector3.mul(a, k)");
             return a.Count < 2 || a[1].Type != DataType.Number
                 ? throw new ScriptRuntimeException("vector3.mul(a, k)")
-                : DynValue.NewTable(LuaVector.PackV3(s, v * (float)a[1].Number));
+                : DynValue.NewTable(LuaVector.PackVector3(s, v * (float)a[1].Number));
         });
 
         t["div"] = DynValue.NewCallback((_, a) =>
         {
-            var v = LuaVector.UnpackV3(a, 0, "vector3.div(a, k)");
+            var v = LuaVector.UnpackVector3(a, 0, "vector3.div(a, k)");
             if (a.Count < 2 || a[1].Type != DataType.Number)
                 throw new ScriptRuntimeException("vector3.div(a, k)");
 
             var k = (float)a[1].Number;
-            return k == 0 ? throw new ScriptRuntimeException("vector3.div: 除数为 0") : DynValue.NewTable(LuaVector.PackV3(s, v / k));
+            return k == 0 ? throw new ScriptRuntimeException("vector3.div: 除数为 0") : DynValue.NewTable(LuaVector.PackVector3(s, v / k));
         });
 
         t["dot"] = Num(a =>
             Vector3.Dot(
-                LuaVector.UnpackV3(a, 0, "vector3.dot(a, b)"),
-                LuaVector.UnpackV3(a, 1, "vector3.dot(a, b)")));
+                LuaVector.UnpackVector3(a, 0, "vector3.dot(a, b)"),
+                LuaVector.UnpackVector3(a, 1, "vector3.dot(a, b)")));
 
         t["cross"] = DynValue.NewCallback((_, a) =>
         {
-            var x = LuaVector.UnpackV3(a, 0, "vector3.cross(a, b)");
-            var y = LuaVector.UnpackV3(a, 1, "vector3.cross(a, b)");
-            return DynValue.NewTable(LuaVector.PackV3(s, Vector3.Cross(x, y)));
+            var x = LuaVector.UnpackVector3(a, 0, "vector3.cross(a, b)");
+            var y = LuaVector.UnpackVector3(a, 1, "vector3.cross(a, b)");
+            return DynValue.NewTable(LuaVector.PackVector3(s, Vector3.Cross(x, y)));
         });
 
-        t["length"] = Num(a => LuaVector.UnpackV3(a, 0, "vector3.length(v)").magnitude);
-        t["lengthSqr"] = Num(a => LuaVector.UnpackV3(a, 0, "vector3.lengthSqr(v)").sqrMagnitude);
+        t["length"] = Num(a => LuaVector.UnpackVector3(a, 0, "vector3.length(v)").magnitude);
+        t["lengthSqr"] = Num(a => LuaVector.UnpackVector3(a, 0, "vector3.lengthSqr(v)").sqrMagnitude);
 
         t["normalize"] = Un(s, v => v.normalized, "vector3.normalize(v)");
 
         t["distance"] = Num(a =>
             Vector3.Distance(
-                LuaVector.UnpackV3(a, 0, "vector3.distance(a, b)"),
-                LuaVector.UnpackV3(a, 1, "vector3.distance(a, b)")));
+                LuaVector.UnpackVector3(a, 0, "vector3.distance(a, b)"),
+                LuaVector.UnpackVector3(a, 1, "vector3.distance(a, b)")));
 
         t["angle"] = Num(a =>
             Vector3.Angle(
-                LuaVector.UnpackV3(a, 0, "vector3.angle(a, b)"),
-                LuaVector.UnpackV3(a, 1, "vector3.angle(a, b)")));
+                LuaVector.UnpackVector3(a, 0, "vector3.angle(a, b)"),
+                LuaVector.UnpackVector3(a, 1, "vector3.angle(a, b)")));
 
         t["lerp"] = DynValue.NewCallback((_, a) =>
         {
-            var x = LuaVector.UnpackV3(a, 0, "vector3.lerp(a, b, t)");
-            var y = LuaVector.UnpackV3(a, 1, "vector3.lerp(a, b, t)");
+            var x = LuaVector.UnpackVector3(a, 0, "vector3.lerp(a, b, t)");
+            var y = LuaVector.UnpackVector3(a, 1, "vector3.lerp(a, b, t)");
             if (a.Count < 3 || a[2].Type != DataType.Number)
                 throw new ScriptRuntimeException("vector3.lerp(a, b, t)");
 
             var k = Mathf.Clamp01((float)a[2].Number);
-            return DynValue.NewTable(LuaVector.PackV3(s, Vector3.Lerp(x, y, k)));
+            return DynValue.NewTable(LuaVector.PackVector3(s, Vector3.Lerp(x, y, k)));
         });
 
         t["clampMagnitude"] = DynValue.NewCallback((_, a) =>
         {
-            var v = LuaVector.UnpackV3(a, 0, "vector3.clampMagnitude(v, max)");
+            var v = LuaVector.UnpackVector3(a, 0, "vector3.clampMagnitude(v, max)");
             return a.Count < 2 || a[1].Type != DataType.Number
                 ? throw new ScriptRuntimeException("vector3.clampMagnitude(v, max)")
-                : DynValue.NewTable(LuaVector.PackV3(s, Vector3.ClampMagnitude(v, (float)a[1].Number)));
+                : DynValue.NewTable(LuaVector.PackVector3(s, Vector3.ClampMagnitude(v, (float)a[1].Number)));
         });
 
         t["project"] = DynValue.NewCallback((_, a) =>
         {
-            var v = LuaVector.UnpackV3(a, 0, "vector3.project(v, onNormal)");
-            var n = LuaVector.UnpackV3(a, 1, "vector3.project(v, onNormal)");
-            return DynValue.NewTable(LuaVector.PackV3(s, Vector3.Project(v, n)));
+            var v = LuaVector.UnpackVector3(a, 0, "vector3.project(v, onNormal)");
+            var n = LuaVector.UnpackVector3(a, 1, "vector3.project(v, onNormal)");
+            return DynValue.NewTable(LuaVector.PackVector3(s, Vector3.Project(v, n)));
         });
 
         t["reflect"] = DynValue.NewCallback((_, a) =>
         {
-            var v = LuaVector.UnpackV3(a, 0, "vector3.reflect(inDir, normal)");
-            var n = LuaVector.UnpackV3(a, 1, "vector3.reflect(inDir, normal)");
-            return DynValue.NewTable(LuaVector.PackV3(s, Vector3.Reflect(v, n)));
+            var v = LuaVector.UnpackVector3(a, 0, "vector3.reflect(inDir, normal)");
+            var n = LuaVector.UnpackVector3(a, 1, "vector3.reflect(inDir, normal)");
+            return DynValue.NewTable(LuaVector.PackVector3(s, Vector3.Reflect(v, n)));
         });
 
-        t["x"] = Num(a => LuaVector.UnpackV3(a, 0, "vector3.x(v)").x);
-        t["y"] = Num(a => LuaVector.UnpackV3(a, 0, "vector3.y(v)").y);
-        t["z"] = Num(a => LuaVector.UnpackV3(a, 0, "vector3.z(v)").z);
+        t["x"] = Num(a => LuaVector.UnpackVector3(a, 0, "vector3.x(v)").x);
+        t["y"] = Num(a => LuaVector.UnpackVector3(a, 0, "vector3.y(v)").y);
+        t["z"] = Num(a => LuaVector.UnpackVector3(a, 0, "vector3.z(v)").z);
 
         return t;
     }
@@ -141,9 +141,9 @@ public class LuaVector3Proxy : IRegisterLua
     {
         return DynValue.NewCallback((_, a) =>
             {
-                var x = LuaVector.UnpackV3(a, 0, sig);
-                var y = LuaVector.UnpackV3(a, 1, sig);
-                return DynValue.NewTable(LuaVector.PackV3(s, op(x, y)));
+                var x = LuaVector.UnpackVector3(a, 0, sig);
+                var y = LuaVector.UnpackVector3(a, 1, sig);
+                return DynValue.NewTable(LuaVector.PackVector3(s, op(x, y)));
             });
     }
 
@@ -151,8 +151,8 @@ public class LuaVector3Proxy : IRegisterLua
     {
         return DynValue.NewCallback((_, a) =>
             {
-                var v = LuaVector.UnpackV3(a, 0, sig);
-                return DynValue.NewTable(LuaVector.PackV3(s, op(v)));
+                var v = LuaVector.UnpackVector3(a, 0, sig);
+                return DynValue.NewTable(LuaVector.PackVector3(s, op(v)));
             });
     }
 }

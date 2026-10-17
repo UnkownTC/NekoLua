@@ -18,7 +18,7 @@ namespace NekoLua.Proxies.Game;
 ///   whitelist.add(id | player)      -- 加白名单
 ///   whitelist.remove(id | player)   -- 移除，返回 bool
 /// </summary>
-public class LuaWhitelistProxy : IRegisterLua
+internal class LuaWhitelistProxy : IRegisterLua
 {
     public string Name { get; } = "whitelist";
 

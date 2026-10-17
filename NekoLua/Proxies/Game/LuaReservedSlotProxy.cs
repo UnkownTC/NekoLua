@@ -16,7 +16,7 @@ namespace NekoLua.Proxies.Game;
 ///   reservedslot.add(id | player)
 ///   reservedslot.remove(id | player)           -> bool
 /// </summary>
-public class LuaReservedSlotProxy : IRegisterLua
+internal class LuaReservedSlotProxy : IRegisterLua
 {
     public string Name { get; } = "reservedslot";
     public Table Create(LuaModInstance mod)

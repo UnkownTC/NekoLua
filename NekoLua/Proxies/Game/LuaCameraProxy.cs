@@ -1,6 +1,7 @@
 ﻿using LabApi.Features.Wrappers;
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 using LabCamera = LabApi.Features.Wrappers.Camera;
@@ -20,7 +21,7 @@ namespace NekoLua.Proxies.Game;
 ///     position / rotation（读写）/ room / zoom / isBeingUsed（读写）/
 ///     base / gameObject
 /// </summary>
-public class LuaCameraProxy : IRegisterLua
+internal class LuaCameraProxy : IRegisterLua
 {
     public string Name { get; } = "camera";
 
@@ -67,7 +68,7 @@ public class LuaCameraProxy : IRegisterLua
             if (args.Count < 2 || args[1].Type != DataType.Number)
                 throw new ScriptRuntimeException("camera.findNear(position, radius)");
 
-            var pos = LuaVector.UnpackV3Args(args[0], "camera.findNear");
+            var pos = LuaVector.UnpackVector3Args(args[0], "camera.findNear");
             var radius = (float)args[1].Number;
 
             var arr = new Table(s);

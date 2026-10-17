@@ -1,7 +1,7 @@
 using System.Globalization;
 
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -16,7 +16,7 @@ namespace NekoLua.Proxies.Time;
 ///   运算：add / sub / mul / div / neg / abs
 ///   判断：zero / isZero / compare / clamp
 /// </summary>
-public class LuaTimeSpanProxy : IRegisterLua
+internal class LuaTimeSpanProxy : IRegisterLua
 {
     public string Name { get; } = "timespan";
 

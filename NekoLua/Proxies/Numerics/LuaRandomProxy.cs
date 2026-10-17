@@ -13,7 +13,7 @@ namespace NekoLua.Proxies.Numerics;
 ///   random.value                    -- [0, 1)
 ///   random.pick(table)              -> 元素 | nil
 /// </summary>
-public class LuaRandomProxy : IRegisterLua
+internal class LuaRandomProxy : IRegisterLua
 {
     public string Name { get; } = "random";
 

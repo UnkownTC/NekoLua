@@ -1,7 +1,7 @@
-﻿using System.Text;
-using MoonSharp.Interpreter;
+﻿using MoonSharp.Interpreter;
 using NekoLua.Loader;
 using NekoLua.Registers;
+using System.Text;
 
 namespace NekoLua.Proxies.Text;
 
@@ -18,7 +18,7 @@ namespace NekoLua.Proxies.Text;
 ///
 /// 原生 string.*（format / sub / gsub / find / rep / byte / char / match / gmatch）不受影响。
 /// </summary>
-public class LuaStringProxy : IRegisterLua
+internal class LuaStringProxy : IRegisterLua
 {
     public string Name { get; } = "string";
 
@@ -73,21 +73,23 @@ public class LuaStringProxy : IRegisterLua
         {
             var src = ArgString(args, 0, "string.contains(s, needle)");
             var needle = ArgString(args, 1, "string.contains(s, needle)");
-            return DynValue.NewBoolean(src.Contains(needle, StringComparison.Ordinal));
+            return DynValue.NewBoolean(src.IndexOf(needle, StringComparison.Ordinal) >= 0);
         });
 
         t["isBlank"] = DynValue.NewCallback((_, args) =>
         {
             var v = args.Count > 0 ? args[0] : DynValue.Nil;
-            if (v.Type is DataType.Nil or DataType.Void) return DynValue.True;
-            return v.Type != DataType.String ? DynValue.False : DynValue.NewBoolean(string.IsNullOrWhiteSpace(v.String));
+            return v.Type is DataType.Nil or DataType.Void
+                ? DynValue.True
+                : v.Type != DataType.String ? DynValue.False : DynValue.NewBoolean(string.IsNullOrWhiteSpace(v.String));
         });
 
         t["isEmpty"] = DynValue.NewCallback((_, args) =>
         {
             var v = args.Count > 0 ? args[0] : DynValue.Nil;
-            if (v.Type is DataType.Nil or DataType.Void) return DynValue.True;
-            return v.Type != DataType.String ? DynValue.False : DynValue.NewBoolean(v.String.Length == 0);
+            return v.Type is DataType.Nil or DataType.Void
+                ? DynValue.True
+                : v.Type != DataType.String ? DynValue.False : DynValue.NewBoolean(v.String.Length == 0);
         });
 
         t["replace"] = DynValue.NewCallback((_, args) =>
@@ -206,8 +208,9 @@ public class LuaStringProxy : IRegisterLua
             var suffix = args.Count > 2 && args[2].Type == DataType.String
                 ? args[2].String : "…";
 
-            if (src.Length <= len) return DynValue.NewString(src);
-            return len <= suffix.Length
+            return src.Length <= len
+                ? DynValue.NewString(src)
+                : len <= suffix.Length
                 ? DynValue.NewString(suffix.Substring(0, len))
                 : DynValue.NewString(src.Substring(0, len - suffix.Length) + suffix);
         });
@@ -305,8 +308,7 @@ public class LuaStringProxy : IRegisterLua
     }
     private static int ArgInt(CallbackArguments args, int i, int fallback, string sig)
     {
-        if (args.Count <= i) return fallback;
-        return args[i].Type != DataType.Number ? throw new ScriptRuntimeException(sig) : (int)args[i].Number;
+        return args.Count <= i ? fallback : args[i].Type != DataType.Number ? throw new ScriptRuntimeException(sig) : (int)args[i].Number;
     }
 
     private static double ArgNum(CallbackArguments args, int i, string sig)
@@ -325,9 +327,9 @@ public class LuaStringProxy : IRegisterLua
     private static string Humanize(double n)
     {
         var abs = Math.Abs(n);
-        if (abs < 1000) return n.ToString("0.##");
-        if (abs < 1e6) return (n / 1e3).ToString("0.0") + "k";
-        return abs < 1e9 ? (n / 1e6).ToString("0.0") + "M" : (n / 1e9).ToString("0.0") + "B";
+        return abs < 1000
+            ? n.ToString("0.##")
+            : abs < 1e6 ? (n / 1e3).ToString("0.0") + "k" : abs < 1e9 ? (n / 1e6).ToString("0.0") + "M" : (n / 1e9).ToString("0.0") + "B";
     }
 
     private static string FormatBytes(double b)

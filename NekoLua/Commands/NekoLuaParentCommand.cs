@@ -1,6 +1,5 @@
 using CommandSystem;
-
-using NekoLua.Dependencies.Extensions;
+using NekoLua.Api.Extensions;
 
 namespace NekoLua.Commands;
 

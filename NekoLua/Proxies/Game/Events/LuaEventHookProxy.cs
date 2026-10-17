@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -14,7 +14,7 @@ namespace NekoLua.Proxies.Game.Events;
 ///   eventhook.classes()             -> table     可用事件类
 ///   eventhook.events(className)     -> table     类下所有事件名
 /// </summary>
-public class LuaEventHookProxy : IRegisterLua
+internal class LuaEventHookProxy : IRegisterLua
 {
     public string Name { get; } = "eventhook";
     public Table Create(LuaModInstance mod)

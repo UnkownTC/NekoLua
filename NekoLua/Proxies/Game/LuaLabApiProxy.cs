@@ -11,7 +11,7 @@ namespace NekoLua.Proxies.Game;
 ///   labapi.version                   -- 当前 LabApi 版本字符串，如 "1.0.0.0"
 ///   labapi.versionCompiled           -- 编译时版本字符串
 /// </summary>
-public class LuaLabApiProxy : IRegisterLua
+internal class LuaLabApiProxy : IRegisterLua
 {
     public string Name { get; } = "labapi";
     public Table Create(LuaModInstance mod)

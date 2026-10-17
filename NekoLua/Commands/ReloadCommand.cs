@@ -21,7 +21,7 @@ internal class ReloadCommand : ICommand
                 $"  - ServerConsoleCommands";
             return false;
         }
-        var mods = LuaLoader.Mods;
+        var mods = LuaModLoader.Mods;
 
         if (mods.Count == 0)
         {
@@ -36,7 +36,7 @@ internal class ReloadCommand : ICommand
             {
                 if (mod.Disabled)
                     continue;
-                LuaLoader.Reload(mod);
+                LuaModLoader.Reload(mod);
                 count++;
             }
 
@@ -68,7 +68,7 @@ internal class ReloadCommand : ICommand
                 continue;
             }
 
-            LuaLoader.Reload(mod);
+            LuaModLoader.Reload(mod);
             reloaded++;
         }
 

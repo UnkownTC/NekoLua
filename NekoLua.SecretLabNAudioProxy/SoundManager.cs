@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace NekoLua.SecretLabNAudioProxy;
 
-public static class SoundManager
+internal static class SoundManager
 {
     public static AudioPlayer PlayGlobally(string path, Transform parent = null, bool loop = false, float volume = 1f)
     {

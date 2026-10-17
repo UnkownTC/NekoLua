@@ -1,9 +1,8 @@
-using System.Net;
-using System.Text;
-
 using MoonSharp.Interpreter;
 using NekoLua.Loader;
 using NekoLua.Registers;
+using System.Net;
+using System.Text;
 
 namespace NekoLua.Proxies.Text;
 
@@ -17,7 +16,7 @@ namespace NekoLua.Proxies.Text;
 ///   encoding.utf8.codepoint(str[, i])     -- 第 i 个字符的 codepoint（1-based）
 ///   encoding.utf8.bytes(str)              -- 字节值数组
 /// </summary>
-public class LuaEncodingProxy : IRegisterLua
+internal class LuaEncodingProxy : IRegisterLua
 {
     public string Name { get; } = "encoding";
     public Table Create(LuaModInstance mod)
@@ -78,9 +77,9 @@ public class LuaEncodingProxy : IRegisterLua
             {
                 var str = Arg(a, 0, "encoding.utf8.codepoint(str[, i])");
                 var i = a.Count > 1 && a[1].Type == DataType.Number ? (int)a[1].Number : 1;
-                if (i < 1 || i > str.Length)
-                    throw new ScriptRuntimeException($"encoding.utf8.codepoint: 索引越界 {i}");
-                return DynValue.NewNumber(char.ConvertToUtf32(str, i - 1));
+                return i < 1 || i > str.Length
+                    ? throw new ScriptRuntimeException($"encoding.utf8.codepoint: 索引越界 {i}")
+                    : DynValue.NewNumber(char.ConvertToUtf32(str, i - 1));
             }),
 
             ["bytes"] = DynValue.NewCallback((_, a) =>
@@ -99,9 +98,7 @@ public class LuaEncodingProxy : IRegisterLua
     }
     static string Arg(CallbackArguments a, int i, string sig)
     {
-        if (a.Count <= i || a[i].Type != DataType.String)
-            throw new ScriptRuntimeException(sig);
-        return a[i].String;
+        return a.Count <= i || a[i].Type != DataType.String ? throw new ScriptRuntimeException(sig) : a[i].String;
     }
     static string ToHex(byte[] bytes)
     {

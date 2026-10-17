@@ -17,7 +17,7 @@ namespace NekoLua.Proxies;
 ///   version.isAtLeast(v, major[,minor[,build[,revision]]])
 ///   version.inRange(v, min, max)
 /// </summary>
-public class LuaVersionProxy : IRegisterLua
+internal class LuaVersionProxy : IRegisterLua
 {
     public string Name { get; } = "version";
 

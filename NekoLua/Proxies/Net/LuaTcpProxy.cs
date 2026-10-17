@@ -4,8 +4,7 @@ using System.Text;
 using LabApi.Features.Console;
 
 using MoonSharp.Interpreter;
-
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -19,12 +18,9 @@ namespace NekoLua.Proxies.Net;
 ///   c:close()
 ///   c.isOpen / c.isClosed
 /// </summary>
-public class LuaTcpProxy : IRegisterLua
+internal class LuaTcpProxy : IRegisterLua
 {
     public string Name { get; } = "tcp";
-
-    // 同步 send 在主线程执行：TcpClient 默认 SendTimeout=0（无限），
-    // 对端停止接收时会无限期冻结主线程，必须设上限（审查 P2-2）
     private const int SendTimeoutMs = 5000;
 
     public Table Create(LuaModInstance mod)
@@ -187,8 +183,6 @@ public class LuaTcpProxy : IRegisterLua
             }
             finally
             {
-                // Dispose 直接在 IO 线程执行（不触碰 Script，线程安全）：
-                // 随回调一起 Post 进主线程队列时，队列满会被整体丢弃导致连接泄漏（审查 P2-21）
                 Post(() => Invoke(_onClose));
                 Dispose();
             }

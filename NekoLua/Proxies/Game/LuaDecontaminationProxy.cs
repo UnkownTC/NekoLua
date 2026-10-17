@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -18,7 +18,7 @@ namespace NekoLua.Proxies.Game;
 ///     decontamination.offset          number    读写
 ///     decontamination.elevatorsText   string    读写
 /// </summary>
-public class LuaDecontaminationProxy : IRegisterLua
+internal class LuaDecontaminationProxy : IRegisterLua
 {
     public string Name { get; } = "decontamination";
     public Table Create(LuaModInstance mod)

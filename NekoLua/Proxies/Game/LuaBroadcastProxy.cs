@@ -24,7 +24,7 @@ namespace NekoLua.Proxies.Game;
 ///   broadcast.flags                 -- 常量表
 ///     .normal = 0 / .truncated = 1 / .adminChat = 2
 /// </summary>
-public class LuaBroadcastProxy : IRegisterLua
+internal class LuaBroadcastProxy : IRegisterLua
 {
     public string Name { get; } = "broadcast";
 
