@@ -1,7 +1,7 @@
 using LabApi.Features.Wrappers;
 
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -38,7 +38,7 @@ namespace NekoLua.Proxies.Game;
 ///     warhead.resumeScenarios
 ///     warhead.deadmanSwitchScenario
 /// </summary>
-public class LuaWarheadProxy : IRegisterLua
+internal class LuaWarheadProxy : IRegisterLua
 {
     public string Name { get; } = "warhead";
     public Table Create(LuaModInstance mod)

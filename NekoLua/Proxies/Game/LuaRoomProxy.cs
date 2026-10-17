@@ -1,6 +1,7 @@
 ﻿using MapGeneration;
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 using LabRoom = LabApi.Features.Wrappers.Room;
@@ -26,7 +27,7 @@ namespace NekoLua.Proxies.Game;
 ///     lightController / allLightControllers / players / cameras
 ///     :getClosestLightController(player)
 /// </summary>
-public class LuaRoomProxy : IRegisterLua
+internal class LuaRoomProxy : IRegisterLua
 {
     public string Name { get; } = "room";
 
@@ -79,7 +80,7 @@ public class LuaRoomProxy : IRegisterLua
             if (args.Count < 1 || args[0].Type != DataType.Table)
                 throw new ScriptRuntimeException("room.at(position)");
 
-            var pos = LuaVector.UnpackV3Args(args[0], "room.at");
+            var pos = LuaVector.UnpackVector3Args(args[0], "room.at");
             var r = LabRoom.GetRoomAtPosition(pos);
 
             return r is null ? DynValue.Nil : cache.Wrap(r);

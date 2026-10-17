@@ -3,7 +3,7 @@ using InventorySystem.Items;
 using LabApi.Features.Wrappers;
 
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -38,7 +38,7 @@ namespace NekoLua.Proxies.Game;
 ///     i:dropItem()                   -- 掉落，返回 pickup
 ///     i:moveTo(player)               -- 转移到玩家
 /// </summary>
-public class LuaItemProxy : IRegisterLua
+internal class LuaItemProxy : IRegisterLua
 {
     public string Name { get; } = "item";
 

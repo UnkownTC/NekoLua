@@ -1,7 +1,8 @@
 using LabApi.Features.Wrappers;
 
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -36,7 +37,7 @@ namespace NekoLua.Proxies.Game;
 ///     p:spawn()                              -- 网络生成
 ///     p:destroy()                            -- 销毁
 /// </summary>
-public class LuaPickupProxy : IRegisterLua
+internal class LuaPickupProxy : IRegisterLua
 {
     public string Name { get; } = "pickup";
 
@@ -118,14 +119,14 @@ public class LuaPickupProxy : IRegisterLua
                 throw new ScriptRuntimeException(
                     $"pickup.create: 未知类型 '{args[0].String}'");
 
-            var position = LuaVector.UnpackV3(args, 1, "pickup.create");
+            var position = LuaVector.UnpackVector3(args, 1, "pickup.create");
 
             var rotation = args.Count > 2
-                ? LuaVector.UnpackQ(args, 2, "pickup.create")
+                ? LuaVector.UnpackQuaternion(args, 2, "pickup.create")
                 : Quaternion.identity;
 
             var scale = args.Count > 3
-                ? LuaVector.UnpackV3(args, 3, "pickup.create")
+                ? LuaVector.UnpackVector3(args, 3, "pickup.create")
                 : Vector3.one;
 
             var networkSpawn = args.Count <= 4

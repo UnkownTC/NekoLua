@@ -1,27 +1,40 @@
 using System.Reflection;
 using LabApi.Features;
+using LabApi.Features.Wrappers;
 using LabApi.Loader.Features.Plugins;
-
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Proxies;
 using NekoLua.Registers;
 
 namespace NekoLua;
 
+/// <summary>
+/// NekoLua 插件入口类。
+/// </summary>
 public class MainPlugin : Plugin<Config>
 {
-    public static Assembly PluginAssembly { get; private set; }
-    public static MainPlugin Instance { get; private set; } = null;
+    internal static Assembly PluginAssembly { get; private set; }
+    /// <summary>
+    /// 获取全局 MainPlugin 单例。
+    /// </summary>
+    public static MainPlugin Singleton { get; private set; } = null;
+    /// <inheritdoc/>
     public override string Name { get; } = "NekoLua";
-    public override string Description { get; } = "A simple scpsl plugin, apply lua support";
+    /// <inheritdoc/>
+    public override string Description { get; } = "A simple scpsl plugin, apply lua support.";
+    /// <inheritdoc/>
     public override string Author { get; } = "UnkownTC";
+    /// <inheritdoc/>
+    public override Version Version { get; } = new(1, 0, 0);
+    /// <inheritdoc/>
     public override Version RequiredApiVersion => LabApiProperties.CurrentVersion;
+    /// <inheritdoc/>
     public override void Enable()
     {
         LoadConfigs();
 
-        Instance = this;
+        Singleton = this;
         PluginAssembly = Assembly.GetExecutingAssembly();
 
         LuaEmbeddedExtractor.ExtractAll();
@@ -30,8 +43,9 @@ public class MainPlugin : Plugin<Config>
         LuaRegister.Register(PluginAssembly);
         LuaGameObject.Create();
 
-        LuaLoader.LoadAll();
+        LuaModLoader.LoadAll();
     }
+    /// <inheritdoc/>
     public override void LoadConfigs()
     {
         base.LoadConfigs();
@@ -39,6 +53,7 @@ public class MainPlugin : Plugin<Config>
         if (Config != null)
             CacheConfig = Config;
     }
+    /// <inheritdoc/>
     public override void Disable()
     {
         LuaRegister.Clear();
@@ -51,12 +66,16 @@ public class MainPlugin : Plugin<Config>
         LuaAsyncScheduler.ClearAll();
         LuaRegexProxy.ClearAll();
         LuaMainThread.Clear();
-        LuaLoader.ClearAll();
+        LuaModLoader.ClearAll();
 
         LuaGameObject.Destroy();
 
-        Instance = null!;
+        Singleton = null!;
         PluginAssembly = null!;
     }
+    /// <summary>
+    /// 用于存储全局缓存配置的 Config 实例。
+    /// </summary>
+    /// <remarks>若无法读取 Config 实例，自动使用默认值。</remarks>
     public static Config CacheConfig { get; private set; } = new();
 }

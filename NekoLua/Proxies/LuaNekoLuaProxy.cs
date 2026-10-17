@@ -1,9 +1,7 @@
-using System.Reflection;
-
 using MoonSharp.Interpreter;
-
 using NekoLua.Loader;
 using NekoLua.Registers;
+using System.Reflection;
 
 namespace NekoLua.Proxies;
 
@@ -12,13 +10,13 @@ namespace NekoLua.Proxies;
 ///   nekolua.name / version / author / description
 ///   nekolua.config                  -- 配置快照（反射自动扫描 Config 所有字段，转 camelCase）
 /// </summary>
-public class LuaNekoLuaProxy : IRegisterLua
+internal class LuaNekoLuaProxy : IRegisterLua
 {
     public string Name { get; } = "nekolua";
     public Table Create(LuaModInstance mod)
     {
         var script = mod.Script;
-        var plugin = MainPlugin.Instance;
+        var plugin = MainPlugin.Singleton;
 
         var t = new Table(script)
         {
@@ -55,33 +53,35 @@ public class LuaNekoLuaProxy : IRegisterLua
         return t;
     }
     static string ToCamel(string name)
-        => string.IsNullOrEmpty(name) || char.IsLower(name[0])
-            ? name
-            : char.ToLowerInvariant(name[0]) + name.Substring(1);
+    {
+        return string.IsNullOrEmpty(name) || char.IsLower(name[0])
+                ? name
+                : char.ToLowerInvariant(name[0]) + name.Substring(1);
+    }
+
     static DynValue ToLua(Script script, object? value)
     {
-        if (value is null)
-            return DynValue.Nil;
+        return value is null
+            ? DynValue.Nil
+            : value switch
+            {
+                string s => DynValue.NewString(s),
+                bool b => DynValue.NewBoolean(b),
+                byte x => DynValue.NewNumber(x),
+                sbyte x => DynValue.NewNumber(x),
+                short x => DynValue.NewNumber(x),
+                ushort x => DynValue.NewNumber(x),
+                int x => DynValue.NewNumber(x),
+                uint x => DynValue.NewNumber(x),
+                long x => DynValue.NewNumber(x),
+                ulong x => DynValue.NewNumber(x),
+                float x => DynValue.NewNumber(x),
+                double x => DynValue.NewNumber(x),
 
-        return value switch
-        {
-            string s => DynValue.NewString(s),
-            bool b => DynValue.NewBoolean(b),
-            byte x => DynValue.NewNumber(x),
-            sbyte x => DynValue.NewNumber(x),
-            short x => DynValue.NewNumber(x),
-            ushort x => DynValue.NewNumber(x),
-            int x => DynValue.NewNumber(x),
-            uint x => DynValue.NewNumber(x),
-            long x => DynValue.NewNumber(x),
-            ulong x => DynValue.NewNumber(x),
-            float x => DynValue.NewNumber(x),
-            double x => DynValue.NewNumber(x),
+                string[] arr => ToLuaArray(script, arr, DynValue.NewString),
 
-            string[] arr => ToLuaArray(script, arr, DynValue.NewString),
-
-            _ => DynValue.Nil,
-        };
+                _ => DynValue.Nil,
+            };
     }
     static DynValue ToLuaArray<T>(Script script, T[] arr, Func<T, DynValue> toLua)
     {

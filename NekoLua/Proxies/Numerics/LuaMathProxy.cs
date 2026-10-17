@@ -16,7 +16,7 @@ namespace NekoLua.Proxies.Numerics;
 /// 原生 math.*（floor / ceil / abs / sin / cos / sqrt / random / min / max / …）
 /// 全部保留。
 /// </summary>
-public class LuaMathProxy : IRegisterLua
+internal class LuaMathProxy : IRegisterLua
 {
     public string Name { get; } = "math";
 

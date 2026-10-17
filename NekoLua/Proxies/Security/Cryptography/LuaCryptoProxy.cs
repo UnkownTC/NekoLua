@@ -1,9 +1,8 @@
-using System.Security.Cryptography;
-using System.Text;
-
 using MoonSharp.Interpreter;
 using NekoLua.Loader;
 using NekoLua.Registers;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace NekoLua.Proxies.Security.Cryptography;
 
@@ -27,7 +26,7 @@ namespace NekoLua.Proxies.Security.Cryptography;
 ///   crypto.aes.encryptWithIV(key, ivBase64, text)
 ///   crypto.aes.decryptWithIV(key, ivBase64, base64)
 /// </summary>
-public class LuaCryptoProxy : IRegisterLua
+internal class LuaCryptoProxy : IRegisterLua
 {
     public string Name { get; } = "crypto";
     public Table Create(LuaModInstance mod)
@@ -99,7 +98,7 @@ public class LuaCryptoProxy : IRegisterLua
         {
             var h = HexTable[bytes[i]];
             chars[i * 2] = h[0];
-            chars[i * 2 + 1] = h[1];
+            chars[(i * 2) + 1] = h[1];
         }
         return new string(chars);
     }
@@ -112,7 +111,7 @@ public class LuaCryptoProxy : IRegisterLua
             var bits = args.Count > 0 && args[0].Type == DataType.Number
                 ? (int)args[0].Number : 2048;
 
-            if (bits < 512 || bits > 8192)
+            if (bits is < 512 or > 8192)
                 throw new ScriptRuntimeException("crypto.rsa.generate: bits 应在 512~8192");
 
             try
@@ -225,7 +224,7 @@ public class LuaCryptoProxy : IRegisterLua
             var bits = args.Count > 0 && args[0].Type == DataType.Number
                 ? (int)args[0].Number : 256;
 
-            if (bits != 128 && bits != 192 && bits != 256)
+            if (bits is not 128 and not 192 and not 256)
                 throw new ScriptRuntimeException("crypto.aes.generateKey: bits 只能是 128 / 192 / 256");
 
             using var aes = Aes.Create();

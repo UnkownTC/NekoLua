@@ -1,7 +1,7 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
-using NekoLua.Dependencies.Enums;
-using NekoLua.Dependencies.Structures;
+using NekoLua.Api;
+using NekoLua.Api.Enums;
+using NekoLua.Api.Structures;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -26,7 +26,7 @@ namespace NekoLua.Proxies.Game.Commands;
 /// 回调签名：function(args, sender) -> success?, response?
 ///   sender.player 在 RA/Client 命令里可用
 /// </summary>
-public class LuaCommandProxy : IRegisterLua
+internal class LuaCommandProxy : IRegisterLua
 {
     public string Name { get; } = "command";
     public Table Create(LuaModInstance mod)
@@ -222,7 +222,7 @@ public class LuaCommandProxy : IRegisterLua
 
         return new LuaCommandSpec
         {
-            Name = name,
+            Name = name!,
             Description = OptString(t, "desc") ?? "",
             Aliases = OptStringArray(t, "aliases"),
             IsHide = OptBool(t, "hidden"),
@@ -281,9 +281,7 @@ public class LuaCommandProxy : IRegisterLua
     static string[] OptUsage(Table t, string key)
     {
         var v = t.Get(key);
-        if (v.Type == DataType.String)
-            return [v.String];
-        return v.Type == DataType.Table ? ReadTableAsStrings(v.Table) : [];
+        return v.Type == DataType.String ? [v.String] : v.Type == DataType.Table ? ReadTableAsStrings(v.Table) : [];
     }
     static bool OptBool(Table t, string key)
     {

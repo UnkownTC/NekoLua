@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -12,7 +12,7 @@ namespace NekoLua.Proxies.Time;
 ///   timer.everyLate(seconds[, id], callback)  -- 先等待再触发
 ///   timer.cancel(id) / cancelAll() / count()
 /// </summary>
-public class LuaTimerProxy : IRegisterLua
+internal class LuaTimerProxy : IRegisterLua
 {
     public string Name { get; } = "timer";
     public Table Create(LuaModInstance mod)

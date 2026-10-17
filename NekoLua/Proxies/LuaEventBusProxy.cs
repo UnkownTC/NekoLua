@@ -1,6 +1,5 @@
 using MoonSharp.Interpreter;
-
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -15,7 +14,7 @@ namespace NekoLua.Proxies;
 ///   eventbus.offAll()               -> number
 ///   eventbus.count() / list()
 /// </summary>
-public class LuaEventBusProxy : IRegisterLua
+internal class LuaEventBusProxy : IRegisterLua
 {
     public string Name { get; } = "eventbus";
     public Table Create(LuaModInstance mod)

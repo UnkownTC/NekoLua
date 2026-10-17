@@ -1,8 +1,7 @@
-using System.Text.RegularExpressions;
-
 using MoonSharp.Interpreter;
 using NekoLua.Loader;
 using NekoLua.Registers;
+using System.Text.RegularExpressions;
 
 namespace NekoLua.Proxies.Text;
 
@@ -17,7 +16,7 @@ namespace NekoLua.Proxies.Text;
 ///   template.compile(str)           -> function
 ///     编译成可复用函数：(vars) -> string
 /// </summary>
-public class LuaTemplateProxy : IRegisterLua
+internal class LuaTemplateProxy : IRegisterLua
 {
     public string Name { get; } = "template";
     private static readonly Regex PlaceholderRegex =

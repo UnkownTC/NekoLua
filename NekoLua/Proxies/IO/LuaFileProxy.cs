@@ -1,6 +1,6 @@
 using System.Text;
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -36,7 +36,7 @@ namespace NekoLua.Proxies.IO;
 ///   文件系统：
 ///     file.exists / delete / size / name / parent / join
 /// </summary>
-public class LuaFileProxy : IRegisterLua
+internal class LuaFileProxy : IRegisterLua
 {
     public string Name { get; } = "file";
 

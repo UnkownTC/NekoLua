@@ -1,12 +1,10 @@
-using System.Reflection;
-
 using LabApi.Features.Wrappers;
-
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
-
+using System.Reflection;
 using UnityEngine;
 
 namespace NekoLua.Proxies.Game;
@@ -47,7 +45,7 @@ namespace NekoLua.Proxies.Game;
 ///          minDistance / maxDistance / controllerId / isSpatial / isLooping
 ///     其他子类型：见各自 C# 类定义
 /// </summary>
-public class LuaToyProxy : IRegisterLua
+internal class LuaToyProxy : IRegisterLua
 {
     public string Name { get; } = "toy";
     private static readonly Queue<byte> _freeIds = new();
@@ -95,7 +93,7 @@ public class LuaToyProxy : IRegisterLua
             if (args.Count < 2 || args[1].Type != DataType.Number)
                 throw new ScriptRuntimeException("toy.findNear(position, radius)");
 
-            var pos = LuaVector.UnpackV3Args(args[0], "toy.findNear");
+            var pos = LuaVector.UnpackVector3Args(args[0], "toy.findNear");
             var radius = (float)args[1].Number;
 
             var arr = new Table(s);
@@ -148,15 +146,15 @@ public class LuaToyProxy : IRegisterLua
                 return CreateFromOptions(s, cache, args[0].Table);
 
             var position = args.Count > 0 && args[0].Type == DataType.Table
-                ? LuaVector.UnpackV3Args(args[0], "toy.createSpeaker")
+                ? LuaVector.UnpackVector3Args(args[0], "toy.createSpeaker")
                 : Vector3.zero;
 
             var rotation = args.Count > 1 && args[1].Type == DataType.Table
-                ? LuaVector.UnpackQArgs(args[1], "toy.createSpeaker")
+                ? LuaVector.UnpackQuaternionArgs(args[1], "toy.createSpeaker")
                 : Quaternion.identity;
 
             var scale = args.Count > 2 && args[2].Type == DataType.Table
-                ? LuaVector.UnpackV3Args(args[2], "toy.createSpeaker")
+                ? LuaVector.UnpackVector3Args(args[2], "toy.createSpeaker")
                 : Vector3.one;
 
             try
@@ -195,15 +193,15 @@ public class LuaToyProxy : IRegisterLua
     private static DynValue CreateFromOptions(Script _, LuaObjectCache cache, Table opts)
     {
         var position = opts.Get("position").Type == DataType.Table
-            ? LuaVector.UnpackV3Args(opts.Get("position"), "toy.createSpeaker")
+            ? LuaVector.UnpackVector3Args(opts.Get("position"), "toy.createSpeaker")
             : Vector3.zero;
 
         var rotation = opts.Get("rotation").Type == DataType.Table
-            ? LuaVector.UnpackQArgs(opts.Get("rotation"), "toy.createSpeaker")
+            ? LuaVector.UnpackQuaternionArgs(opts.Get("rotation"), "toy.createSpeaker")
             : Quaternion.identity;
 
         var scale = opts.Get("scale").Type == DataType.Table
-            ? LuaVector.UnpackV3Args(opts.Get("scale"), "toy.createSpeaker")
+            ? LuaVector.UnpackVector3Args(opts.Get("scale"), "toy.createSpeaker")
             : Vector3.one;
 
         try
@@ -303,15 +301,15 @@ public class LuaToyProxy : IRegisterLua
         return DynValue.NewCallback((_, args) =>
         {
             var position = args.Count > 0 && args[0].Type == DataType.Table
-                ? LuaVector.UnpackV3Args(args[0], "toy.create")
+                ? LuaVector.UnpackVector3Args(args[0], "toy.create")
                 : Vector3.zero;
 
             var rotation = args.Count > 1 && args[1].Type == DataType.Table
-                ? LuaVector.UnpackQArgs(args[1], "toy.create")
+                ? LuaVector.UnpackQuaternionArgs(args[1], "toy.create")
                 : Quaternion.identity;
 
             var scale = args.Count > 2 && args[2].Type == DataType.Table
-                ? LuaVector.UnpackV3Args(args[2], "toy.create")
+                ? LuaVector.UnpackVector3Args(args[2], "toy.create")
                 : Vector3.one;
 
             var type = typeof(T);

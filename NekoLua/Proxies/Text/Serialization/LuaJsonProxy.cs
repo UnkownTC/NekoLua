@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -11,7 +11,7 @@ namespace NekoLua.Proxies.Text.Serialization;
 ///   json.encode(value)              -> string
 ///   json.isValid(str)               -> bool
 /// </summary>
-public class LuaJsonProxy : IRegisterLua
+internal class LuaJsonProxy : IRegisterLua
 {
     public string Name { get; } = "json";
     public Table Create(LuaModInstance mod)

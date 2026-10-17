@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -33,7 +33,7 @@ namespace NekoLua.Proxies.Game;
 ///     round.restartSilently()
 ///     round.end([force]) -> bool
 /// </summary>
-public class LuaRoundProxy : IRegisterLua
+internal class LuaRoundProxy : IRegisterLua
 {
     public string Name { get; } = "round";
     public Table Create(LuaModInstance mod)

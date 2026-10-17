@@ -16,7 +16,7 @@ namespace NekoLua.Proxies;
 ///   env.set(name, value)        -> bool      受 Config.EnvWriteEnabled 控制
 ///   env.delete(name)            -> bool      同上
 /// </summary>
-public class LuaEnvProxy : IRegisterLua
+internal class LuaEnvProxy : IRegisterLua
 {
     public string Name { get; } = "env";
 
@@ -93,8 +93,6 @@ public class LuaEnvProxy : IRegisterLua
     }
     static string ArgName(CallbackArguments a, string sig)
     {
-        if (a.Count < 1 || a[0].Type != DataType.String)
-            throw new ScriptRuntimeException(sig);
-        return a[0].String;
+        return a.Count < 1 || a[0].Type != DataType.String ? throw new ScriptRuntimeException(sig) : a[0].String;
     }
 }

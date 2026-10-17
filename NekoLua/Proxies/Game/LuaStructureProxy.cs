@@ -1,6 +1,7 @@
 ﻿using LabApi.Features.Wrappers;
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 using UnityEngine;
@@ -29,7 +30,7 @@ namespace NekoLua.Proxies.Game;
 ///     MicroPedestal / PedestalLocker / ExperimentalWeaponLocker / …
 ///     具体成员由各子类的 public 属性决定。
 /// </summary>
-public class LuaStructureProxy : IRegisterLua
+internal class LuaStructureProxy : IRegisterLua
 {
     public string Name { get; } = "structure";
 
@@ -98,7 +99,7 @@ public class LuaStructureProxy : IRegisterLua
             if (args.Count < 2 || args[1].Type != DataType.Number)
                 throw new ScriptRuntimeException("structure.findNear(position, radius)");
 
-            var pos = LuaVector.UnpackV3Args(args[0], "structure.findNear");
+            var pos = LuaVector.UnpackVector3Args(args[0], "structure.findNear");
             var radius = (float)args[1].Number;
 
             var arr = new Table(s);

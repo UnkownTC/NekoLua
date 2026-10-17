@@ -6,13 +6,26 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<PlatformTarget>x64</PlatformTarget>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<GenerateDocumentationFile>False</GenerateDocumentationFile>
+		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+		<SignAssembly>False</SignAssembly>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>NekoLua</Title>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>scpsl;lua</PackageTags>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+		<Copyright>© 2026 UnkownTC</Copyright>
+		<PackageProjectUrl>https://github.com/UnkownTC/NekoLua</PackageProjectUrl>
+		<FileVersion>1.0.0.0</FileVersion>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="MoonSharp" Version="2.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="Northwood.LabAPI" Version="1.1.7" />
-		<PackageReference Include="NVorbis" Version="0.10.5" />
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 	</ItemGroup>
 
@@ -24,6 +37,17 @@
 		<EmbeddedResource Include="Properties\Resource\EmbeddedLua\*.lua">
 			<LogicalName>NekoLua.EmbeddedLua.%(Filename)%(Extension)</LogicalName>
 		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\LICENSE">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	  <None Include="..\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 
 	<ItemGroup>

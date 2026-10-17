@@ -10,7 +10,7 @@ namespace NekoLua.Proxies.Collections;
 ///   copy / deepcopy / merge / deepMerge
 ///   contains / hasKey / size / isEmpty
 /// </summary>
-public class LuaTableProxy : IRegisterLua
+internal class LuaTableProxy : IRegisterLua
 {
     public string Name { get; } = "table";
 
