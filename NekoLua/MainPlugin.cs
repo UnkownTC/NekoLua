@@ -24,9 +24,9 @@ public class MainPlugin : Plugin<Config>
     /// <inheritdoc/>
     public override string Description { get; } = "A simple scpsl plugin, apply lua support.";
     /// <inheritdoc/>
-    public override string Author { get; } = "UnkownTC";
+    public override string Author { get; } = "UnkownTC & Supper-Steve & xuhan321";
     /// <inheritdoc/>
-    public override Version Version { get; } = new(1, 0, 0);
+    public override Version Version { get; } = new(1, 0, 1);
     /// <inheritdoc/>
     public override Version RequiredApiVersion => LabApiProperties.CurrentVersion;
     /// <inheritdoc/>

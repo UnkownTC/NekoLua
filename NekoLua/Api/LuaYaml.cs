@@ -6,7 +6,7 @@ namespace NekoLua.Api;
 
 internal static class LuaYaml
 {
-    private const int MaxDepth = 512;
+    private const int MaxDepth = LuaConstants.MaxDepth;
 
     private sealed class Line
     {

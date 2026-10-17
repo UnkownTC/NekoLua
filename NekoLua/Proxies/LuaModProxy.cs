@@ -17,7 +17,6 @@ namespace NekoLua.Proxies;
 internal class LuaModProxy : IRegisterLua
 {
     public string Name { get; } = "mod";
-    public const string ReservedConfigKey = "server_port";
     private const int MaxMergeDepth = 64;
     public Table Create(LuaModInstance mod)
     {
@@ -75,7 +74,6 @@ internal class LuaModProxy : IRegisterLua
                 throw new ScriptRuntimeException("mod.registercfg: 需要 table 或 json 字符串");
         }
 
-        RejectReserved(defaults);
 
         var existing = modTable.Get("config").Table;
         var merged = DeepMerge(mod.Script, defaults, existing, 0);
@@ -83,14 +81,6 @@ internal class LuaModProxy : IRegisterLua
         SaveToDisk(mod, merged);
         modTable["config"] = DynValue.NewTable(merged);
         return DynValue.Nil;
-    }
-
-    static void RejectReserved(Table cfg)
-    {
-        var v = cfg.Get(ReservedConfigKey);
-        if (v.Type != DataType.Nil)
-            throw new ScriptRuntimeException(
-                $"mod.registercfg: '{ReservedConfigKey}' 是系统保留键，不能由 mod 声明");
     }
     static Table DeepMerge(Script script, Table baseT, Table overrideT, int depth)
     {
@@ -128,7 +118,6 @@ internal class LuaModProxy : IRegisterLua
                 return null;
 
             var t = dyn.Table;
-            t[ReservedConfigKey] = DynValue.Nil;
             return t;
         }
         catch (Exception ex)
