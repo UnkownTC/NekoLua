@@ -21,6 +21,7 @@
 		<FileVersion>1.0.1.0</FileVersion>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<AssemblyVersion>1.0.1.0</AssemblyVersion>
+		<Version>1.0.1</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
