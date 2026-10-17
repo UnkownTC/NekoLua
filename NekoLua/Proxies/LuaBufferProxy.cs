@@ -1,9 +1,7 @@
-using System.Text;
-
 using MoonSharp.Interpreter;
-
 using NekoLua.Loader;
 using NekoLua.Registers;
+using System.Text;
 
 namespace NekoLua.Proxies;
 
@@ -19,7 +17,7 @@ namespace NekoLua.Proxies;
 ///   b:clear() / reset()
 ///   b.position（读写）/ b.size
 /// </summary>
-public class LuaBufferProxy : IRegisterLua
+internal class LuaBufferProxy : IRegisterLua
 {
     public string Name { get; } = "buffer";
 

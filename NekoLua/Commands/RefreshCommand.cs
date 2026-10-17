@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 using CommandSystem;
 
 using LabApi.Features.Console;
@@ -27,12 +23,12 @@ internal class RefreshCommand : ICommand
             return false;
         }
 
-        var before = LuaLoader.Mods.Select(m => m.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var before = LuaModLoader.Mods.Select(m => m.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         List<LuaModInstance> after;
         try
         {
-            after = LuaLoader.Refresh();
+            after = LuaModLoader.Refresh();
         }
         catch (Exception ex)
         {

@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -27,7 +27,7 @@ namespace NekoLua.Proxies.Game;
 ///     cassie.clear()                   打断当前 + 清空队列
 ///     cassie.isValid(word) -> bool     词库检查
 /// </summary>
-public class LuaCassieProxy : IRegisterLua
+internal class LuaCassieProxy : IRegisterLua
 {
     public string Name { get; } = "cassie";
     public Table Create(LuaModInstance mod)

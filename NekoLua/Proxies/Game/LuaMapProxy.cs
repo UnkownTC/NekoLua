@@ -3,7 +3,8 @@ using LabApi.Features.Wrappers;
 using MapGeneration;
 
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -38,7 +39,7 @@ namespace NekoLua.Proxies.Game;
 ///     map.setColorOfLights(color[, zone|zones])
 ///     map.resetColorOfLights([zone|zones])
 /// </summary>
-public class LuaMapProxy : IRegisterLua
+internal class LuaMapProxy : IRegisterLua
 {
     public string Name { get; } = "map";
 
@@ -47,10 +48,6 @@ public class LuaMapProxy : IRegisterLua
         var s = mod.Script;
         var t = new Table(s);
         var cache = new LuaObjectCache(s);
-
-        // ============================================================
-        // 属性
-        // ============================================================
 
         t["seed"] = DynValue.NewCallback((_, _) =>
             DynValue.NewNumber(Map.Seed));
@@ -143,34 +140,25 @@ public class LuaMapProxy : IRegisterLua
 
         t["getRandomRagdoll"] = DynValue.NewCallback((_, args) =>
         {
-            Ragdoll? r;
-
-            if (args.Count == 0)
-                r = Map.GetRandomRagdoll();
-            else r = TryZones(args[0], out var zones) ? Map.GetRandomRagdoll(zones) : Map.GetRandomRagdoll(ParseZone(args[0].String));
-
+            Ragdoll? r = args.Count == 0
+                ? Map.GetRandomRagdoll()
+                : TryZones(args[0], out var zones) ? Map.GetRandomRagdoll(zones) : Map.GetRandomRagdoll(ParseZone(args[0].String));
             return r is null ? DynValue.Nil : cache.Wrap(r);
         });
 
         t["getRandomCamera"] = DynValue.NewCallback((_, args) =>
         {
-            Camera? c;
-
-            if (args.Count == 0)
-                c = Map.GetRandomCamera();
-            else c = TryZones(args[0], out var zones) ? Map.GetRandomCamera(zones) : Map.GetRandomCamera(ParseZone(args[0].String));
-
+            Camera? c = args.Count == 0
+                ? Map.GetRandomCamera()
+                : TryZones(args[0], out var zones) ? Map.GetRandomCamera(zones) : Map.GetRandomCamera(ParseZone(args[0].String));
             return c is null ? DynValue.Nil : cache.Wrap(c);
         });
 
         t["getRandomLight"] = DynValue.NewCallback((_, args) =>
         {
-            LightsController? l;
-
-            if (args.Count == 0)
-                l = Map.GetRandomLight();
-            else l = TryZones(args[0], out var zones) ? Map.GetRandomLight(zones) : Map.GetRandomLight(ParseZone(args[0].String));
-
+            LightsController? l = args.Count == 0
+                ? Map.GetRandomLight()
+                : TryZones(args[0], out var zones) ? Map.GetRandomLight(zones) : Map.GetRandomLight(ParseZone(args[0].String));
             return l is null ? DynValue.Nil : cache.Wrap(l);
         });
 

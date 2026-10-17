@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -11,7 +11,7 @@ namespace NekoLua.Proxies.Text.Serialization;
 ///   xml.encode(value[, rootName])   -> string
 ///   xml.isValid(str)                -> bool
 /// </summary>
-public class LuaXmlProxy : IRegisterLua
+internal class LuaXmlProxy : IRegisterLua
 {
     public string Name { get; } = "xml";
 

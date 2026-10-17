@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -28,7 +28,7 @@ namespace NekoLua.Proxies.Game;
 ///     server.shutdown([redirectPort])
 ///     server.runCommand(cmd) -> string
 /// </summary>
-public class LuaServerProxy : IRegisterLua
+internal class LuaServerProxy : IRegisterLua
 {
     public string Name { get; } = "server";
     public Table Create(LuaModInstance mod)

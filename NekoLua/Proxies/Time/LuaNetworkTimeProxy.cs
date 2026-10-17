@@ -19,7 +19,7 @@ namespace NekoLua.Proxies.Time;
 ///
 ///   time.delta()    -> number    上一帧间隔（秒，忽略 timeScale）
 /// </summary>
-public class LuaNetworkTimeProxy : IRegisterLua
+internal class LuaNetworkTimeProxy : IRegisterLua
 {
     public string Name { get; } = "time";
 

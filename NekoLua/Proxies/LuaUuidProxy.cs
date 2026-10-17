@@ -13,7 +13,7 @@ namespace NekoLua.Proxies;
 ///   uuid.parse(str)                 -> table | nil
 ///   uuid.nil                        -- 全零 UUID
 /// </summary>
-public class LuaUuidProxy : IRegisterLua
+internal class LuaUuidProxy : IRegisterLua
 {
     public string Name { get; } = "uuid";
     public Table Create(LuaModInstance mod)

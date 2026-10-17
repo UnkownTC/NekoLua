@@ -1,6 +1,7 @@
 ﻿using LabApi.Features.Wrappers;
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 using SecretLabNAudio.Core;
@@ -8,10 +9,9 @@ using UnityEngine;
 
 namespace NekoLua.SecretLabNAudioProxy.Proxies;
 
-public class LuaSoundProxy : IRegisterLua
+internal class LuaSoundProxy : IRegisterLua
 {
     public string Name { get; } = "sound";
-
     public Table Create(LuaModInstance mod)
     {
         var s = mod.Script;
@@ -23,15 +23,10 @@ public class LuaSoundProxy : IRegisterLua
 
         return t;
     }
-
-    // ================================================================
-    // playGlobal(path[, options])
-    // ================================================================
-
-    private static DynValue PlayGlobal(LuaModInstance mod, LuaObjectCache cache, CallbackArguments args)
+    private DynValue PlayGlobal(LuaModInstance mod, LuaObjectCache cache, CallbackArguments args)
     {
         if (args.Count < 1 || args[0].Type != DataType.String)
-            throw new ScriptRuntimeException("sound.playGlobal(path[, options])");
+            throw new ScriptRuntimeException($"{Name}.playGlobal(path[, options])");
 
         var path = Resolve(mod, args[0].String);
         var opts = args.Count > 1 && args[1].Type == DataType.Table ? args[1].Table : null;
@@ -54,7 +49,6 @@ public class LuaSoundProxy : IRegisterLua
 
                 case DataType.Function:
                     {
-                        // Func<Player, bool> → Predicate<Player>
                         var f = BuildLuaFilter(mod, cache, filter);
                         player = SoundManager.PlayGlobally(
                             path, p => f(p), parent, loop, volume);
@@ -68,7 +62,7 @@ public class LuaSoundProxy : IRegisterLua
 
                 default:
                     throw new ScriptRuntimeException(
-                        "sound.playGlobal: options.filter 需要函数或玩家数组");
+                        $"{Name}.playGlobal: options.filter 需要函数或玩家数组");
             }
 
             return cache.Wrap(player);
@@ -76,21 +70,16 @@ public class LuaSoundProxy : IRegisterLua
         catch (ScriptRuntimeException) { throw; }
         catch (Exception ex)
         {
-            throw new ScriptRuntimeException($"sound.playGlobal: {ex.Message}");
+            throw new ScriptRuntimeException($"{Name}.playGlobal: {ex.Message}");
         }
     }
-
-    // ================================================================
-    // playLocal(path, position[, options])
-    // ================================================================
-
-    private static DynValue PlayLocal(LuaModInstance mod, LuaObjectCache cache, CallbackArguments args)
+    private DynValue PlayLocal(LuaModInstance mod, LuaObjectCache cache, CallbackArguments args)
     {
         if (args.Count < 2 || args[0].Type != DataType.String || args[1].Type != DataType.Table)
-            throw new ScriptRuntimeException("sound.playLocal(path, position[, options])");
+            throw new ScriptRuntimeException($"{Name}.playLocal(path, position[, options])");
 
         var path = Resolve(mod, args[0].String);
-        var pos = LuaVector.UnpackV3Args(args[1], "sound.playLocal");
+        var pos = LuaVector.UnpackVector3Args(args[1], $"{Name}.playLocal");
         var opts = args.Count > 2 && args[2].Type == DataType.Table ? args[2].Table : null;
         var loop = OptBool(opts, "loop", false);
         var volume = (float)OptNumber(opts, "volume", 1.0);
@@ -123,7 +112,7 @@ public class LuaSoundProxy : IRegisterLua
 
                 default:
                     throw new ScriptRuntimeException(
-                        "sound.playLocal: options.filter 只支持函数");
+                        $"{Name}.playLocal: options.filter 只支持函数");
             }
 
             return cache.Wrap(player);
@@ -131,16 +120,10 @@ public class LuaSoundProxy : IRegisterLua
         catch (ScriptRuntimeException) { throw; }
         catch (Exception ex)
         {
-            throw new ScriptRuntimeException($"sound.playLocal: {ex.Message}");
+            throw new ScriptRuntimeException($"{Name}.playLocal: {ex.Message}");
         }
     }
-
-    // ================================================================
-    // filter
-    // ================================================================
-
-    /// <summary>Lua 函数 → Func&lt;Player, bool&gt;，参数是 Player 代理表。</summary>
-    private static Func<Player, bool> BuildLuaFilter(
+    private Func<Player, bool> BuildLuaFilter(
         LuaModInstance mod, LuaObjectCache cache, DynValue luaFn)
     {
         return player =>
@@ -155,7 +138,7 @@ public class LuaSoundProxy : IRegisterLua
             catch (InterpreterException ex)
             {
                 LabApi.Features.Console.Logger.Error(
-                    $"[{mod.Name}] sound filter 回调异常: {ex.DecoratedMessage}");
+                    $"[{mod.Name}] {Name} filter 回调异常: {ex.DecoratedMessage}");
                 return false;
             }
             catch
@@ -164,8 +147,6 @@ public class LuaSoundProxy : IRegisterLua
             }
         };
     }
-
-    /// <summary>Lua 玩家数组 → ICollection&lt;Player&gt;。</summary>
     private static ICollection<Player> ExtractPlayers(Table tbl)
     {
         var list = new List<Player>();
@@ -182,11 +163,6 @@ public class LuaSoundProxy : IRegisterLua
 
         return list;
     }
-
-    // ================================================================
-    // 参数解析
-    // ================================================================
-
     private static bool OptBool(Table? opts, string key, bool fallback)
     {
         if (opts is null) return fallback;
@@ -200,7 +176,6 @@ public class LuaSoundProxy : IRegisterLua
         var v = opts.Get(key);
         return v.Type == DataType.Number ? v.Number : fallback;
     }
-
     private static Transform? OptTransform(Table? opts, string key)
     {
         if (opts is null) return null;
@@ -215,9 +190,8 @@ public class LuaSoundProxy : IRegisterLua
                 _ => null,
             };
     }
-
-    private static string Resolve(LuaModInstance mod, string input)
+    private string Resolve(LuaModInstance mod, string input)
     {
-        return LuaPathGuard.Resolve(mod, input, "sound");
+        return LuaPathGuard.Resolve(mod, input, Name);
     }
 }

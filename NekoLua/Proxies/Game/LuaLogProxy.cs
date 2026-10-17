@@ -1,5 +1,5 @@
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies.Enums;
+using NekoLua.Api.Enums;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -12,7 +12,7 @@ namespace NekoLua.Proxies.Game;
 ///   log.error(msg)
 ///   log.debug(msg[, enabled])       -- enabled 默认 true，传 false 静默
 /// </summary>
-public class LuaLogProxy : IRegisterLua
+internal class LuaLogProxy : IRegisterLua
 {
     public string Name { get; } = "log";
     public Table Create(LuaModInstance mod)

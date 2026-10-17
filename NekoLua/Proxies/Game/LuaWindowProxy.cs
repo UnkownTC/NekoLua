@@ -1,7 +1,8 @@
 using LabApi.Features.Wrappers;
 
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -20,7 +21,7 @@ namespace NekoLua.Proxies.Game;
 /// 实例：w.isBroken / isDestroyed / health（读写）
 ///      position / rotation / base / transform / gameObject
 /// </summary>
-public class LuaWindowProxy : IRegisterLua
+internal class LuaWindowProxy : IRegisterLua
 {
     public string Name { get; } = "window";
     private const float RepairHealth = 50f;
@@ -50,7 +51,7 @@ public class LuaWindowProxy : IRegisterLua
             if (args.Count < 2 || args[1].Type != DataType.Number)
                 throw new ScriptRuntimeException("window.findNear(position, radius)");
 
-            var pos = LuaVector.UnpackV3Args(args[0], "window.findNear");
+            var pos = LuaVector.UnpackVector3Args(args[0], "window.findNear");
             var radius = (float)args[1].Number;
 
             var arr = new Table(s);

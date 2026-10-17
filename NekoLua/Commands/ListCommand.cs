@@ -19,7 +19,7 @@ internal class ListCommand : ICommand
                 $"  - ServerConsoleCommands";
             return false;
         }
-        var mods = LuaLoader.Mods;
+        var mods = LuaModLoader.Mods;
 
         if (mods.Count == 0)
         {
@@ -31,7 +31,6 @@ internal class ListCommand : ICommand
         {
             $"共 {mods.Count} 个 Lua mod："
         };
-
         var index = 1;
         foreach (var mod in mods.OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase))
         {

@@ -24,7 +24,7 @@ namespace NekoLua.Proxies;
 ///
 /// 每个 mod 独立 LRU 缓存（上限 256），Reload / Disable 时自动清理。
 /// </summary>
-public class LuaRegexProxy : IRegisterLua
+internal class LuaRegexProxy : IRegisterLua
 {
     public string Name { get; } = "regex";
     private const int MaxCacheSize = 256;

@@ -1,10 +1,8 @@
-using System.Globalization;
-
 using MoonSharp.Interpreter;
 using NekoLua.Loader;
 using NekoLua.Registers;
-
 using NorthwoodLib.Pools;
+using System.Globalization;
 
 namespace NekoLua.Proxies.Time;
 
@@ -18,7 +16,7 @@ namespace NekoLua.Proxies.Time;
 ///   datetime.diff(a, b)             -- a - b
 ///   datetime.utcOffset()            -- 本地时区偏移（秒）
 /// </summary>
-public class LuaDateTimeProxy : IRegisterLua
+internal class LuaDateTimeProxy : IRegisterLua
 {
     public string Name { get; } = "datetime";
 

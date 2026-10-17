@@ -1,6 +1,5 @@
 using MoonSharp.Interpreter;
-
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -15,7 +14,7 @@ namespace NekoLua.Proxies.IO;
 ///   directory.info(path)            -> {name, path, created, modified}
 ///   directory.move / copy(src, dst)
 /// </summary>
-public class LuaDirectoryProxy : IRegisterLua
+internal class LuaDirectoryProxy : IRegisterLua
 {
     public string Name { get; } = "directory";
 

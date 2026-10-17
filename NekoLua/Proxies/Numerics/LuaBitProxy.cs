@@ -12,7 +12,7 @@ namespace NekoLua.Proxies.Numerics;
 ///   bit.tobit(a)
 ///   bit.tohex(a[, n])                    -> 十六进制字符串
 /// </summary>
-public class LuaBitProxy : IRegisterLua
+internal class LuaBitProxy : IRegisterLua
 {
     public string Name { get; } = "bit";
     public Table Create(LuaModInstance mod)

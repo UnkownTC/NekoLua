@@ -1,8 +1,7 @@
 using LabApi.Features.Console;
 
 using MoonSharp.Interpreter;
-
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -15,7 +14,7 @@ namespace NekoLua.Proxies;
 ///   mod.registercfg(value)          -- 注册默认配置（table 或 json 字符串），
 ///                                      与磁盘深合并后落盘
 /// </summary>
-public class LuaModProxy : IRegisterLua
+internal class LuaModProxy : IRegisterLua
 {
     public string Name { get; } = "mod";
     public const string ReservedConfigKey = "server_port";

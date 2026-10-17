@@ -4,8 +4,7 @@ using System.Text;
 using LabApi.Features.Console;
 
 using MoonSharp.Interpreter;
-
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -18,7 +17,7 @@ namespace NekoLua.Proxies.Net;
 ///   ws:send(text) / close()
 ///   ws.isOpen / ws.isClosed / ws.state    -- state: "open"/"closed"/...
 /// </summary>
-public class LuaWebSocketProxy : IRegisterLua
+internal class LuaWebSocketProxy : IRegisterLua
 {
     public string Name { get; } = "websocket";
 

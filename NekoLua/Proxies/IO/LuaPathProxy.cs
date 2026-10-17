@@ -16,7 +16,7 @@ namespace NekoLua.Proxies.IO;
 ///   path.temp() / randomFile()          -> string
 ///   path.separator / altSeparator       -- 主/备分隔符
 /// </summary>
-public class LuaPathProxy : IRegisterLua
+internal class LuaPathProxy : IRegisterLua
 {
     public string Name { get; } = "path";
 

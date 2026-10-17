@@ -3,7 +3,7 @@ using Interactables.Interobjects;
 using LabApi.Features.Wrappers;
 
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -34,7 +34,7 @@ namespace NekoLua.Proxies.Game;
 /// 枚举常量：
 ///   elevator.lockReason.*           -- DoorLockReason 位值
 /// </summary>
-public class LuaElevatorProxy : IRegisterLua
+internal class LuaElevatorProxy : IRegisterLua
 {
     public string Name { get; } = "elevator";
     public Table Create(LuaModInstance mod)

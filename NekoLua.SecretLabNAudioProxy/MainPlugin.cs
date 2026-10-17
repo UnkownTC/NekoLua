@@ -13,7 +13,7 @@ public class MainPlugin : Plugin
     private static Assembly _assembly;
     public static MainPlugin Instance { get; private set; } = null;
     public override string Name { get; } = "NekoLua.SecretLabNAudio";
-    public override string Description { get; } = "A support for SecretLabNAudio plugin.";
+    public override string Description { get; } = "A support plugin for SecretLabNAudio.";
     public override string Author { get; } = "UnkownTC";
     public override Version RequiredApiVersion => LabApiProperties.CurrentVersion;
     public override void Enable()
@@ -29,7 +29,7 @@ public class MainPlugin : Plugin
             if (!AudioReaderFactoryManager.TryGetFactory(".ogg", out _))
                 AudioReaderFactoryManager.RegisterFactory(".ogg", new OggAudioReaderFactory());
         }
-        catch (TypeLoadException) { Logger.Warn("当前缺少依赖 NAudio.Vorbis ，可能会造成ogg音频无法被加载，如果不需要支持ogg音频可以忽略此条警告。"); }
+        catch (TypeLoadException) { Logger.Warn("当前缺少依赖\"NAudio.Vorbis\"，可能会造成ogg音频无法被加载，如果不需要支持ogg音频可以忽略此条警告。"); }
     }
     public override void Disable()
     {

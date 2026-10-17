@@ -4,8 +4,7 @@ using System.Text;
 using LabApi.Features.Console;
 
 using MoonSharp.Interpreter;
-
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -22,12 +21,9 @@ namespace NekoLua.Proxies.Net;
 ///     http.asyncPost / asyncPut / asyncPatch / asyncDelete(url, body, callback)
 ///   callback(err, status, body)
 /// </summary>
-public class LuaHttpProxy : IRegisterLua
+internal class LuaHttpProxy : IRegisterLua
 {
     public string Name { get; } = "http";
-
-    // 响应体上限：默认 ResponseContentRead 会把整个响应缓冲进内存，
-    // 恶意服务器返回超大响应（或慢速滴流绕过超时）会打爆进程内存（审查 P1-5）
     private const long MaxResponseBytes = 64 * 1024 * 1024;
     private const int ReadChunkSize = 81920;
 
@@ -68,7 +64,7 @@ public class LuaHttpProxy : IRegisterLua
         try
         {
             using var req = BuildRequest(method, uri, body);
-            // ResponseHeadersRead：先拿响应头做体积预检，再限幅读取 body
+
             using var resp = Client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead)
                 .GetAwaiter().GetResult();
 
@@ -91,9 +87,6 @@ public class LuaHttpProxy : IRegisterLua
                 DynValue.NewString(ex.Message));
         }
     }
-
-    // 限幅读取响应体：Content-Length 超限直接拒绝；无长度头时按累计字节封顶；
-    // ct 覆盖读取全程，慢速滴流服务器同样受超时约束（HttpClient.Timeout 只覆盖到响应头）
     private static async Task<string> ReadBounded(HttpContent content, CancellationToken ct)
     {
         if (content.Headers.ContentLength is > MaxResponseBytes)

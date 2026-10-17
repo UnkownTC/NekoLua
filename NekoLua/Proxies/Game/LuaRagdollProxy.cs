@@ -1,7 +1,8 @@
 using LabApi.Features.Wrappers;
 
 using MoonSharp.Interpreter;
-using NekoLua.Dependencies;
+using NekoLua.Api;
+using NekoLua.Api.TypeScanner;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -38,7 +39,7 @@ namespace NekoLua.Proxies.Game;
 ///     r:destroy()                       -- 销毁
 ///     r:freeze() / r:unFreeze()
 /// </summary>
-public class LuaRagdollProxy : IRegisterLua
+internal class LuaRagdollProxy : IRegisterLua
 {
     public string Name { get; } = "ragdoll";
 
@@ -156,8 +157,8 @@ public class LuaRagdollProxy : IRegisterLua
                 throw new ScriptRuntimeException(
                     $"ragdoll.spawn: 未知角色 '{args[0].String}'");
 
-            var position = LuaVector.UnpackV3(args, 1, "ragdoll.spawn");
-            var rotation = LuaVector.UnpackQ(args, 2, "ragdoll.spawn");
+            var position = LuaVector.UnpackVector3(args, 1, "ragdoll.spawn");
+            var rotation = LuaVector.UnpackQuaternion(args, 2, "ragdoll.spawn");
             var nickname = args[3].String;
 
             try

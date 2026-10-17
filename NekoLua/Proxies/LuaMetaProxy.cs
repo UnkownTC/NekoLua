@@ -1,6 +1,5 @@
 using MoonSharp.Interpreter;
-
-using NekoLua.Dependencies;
+using NekoLua.Api;
 using NekoLua.Loader;
 using NekoLua.Registers;
 
@@ -17,7 +16,7 @@ namespace NekoLua.Proxies;
 ///   meta.deepCopy(x)                -- JSON 往返深拷贝
 ///   meta.equals(a, b)               -> bool      JSON 深度比较
 /// </summary>
-public class LuaMetaProxy : IRegisterLua
+internal class LuaMetaProxy : IRegisterLua
 {
     public string Name { get; } = "meta";
     public Table Create(LuaModInstance mod)

@@ -1,10 +1,9 @@
-using System.Text;
-
 using LabApi.Features.Console;
+using System.Text;
 
 namespace NekoLua.Loader;
 
-public static class LuaEmbeddedExtractor
+internal static class LuaEmbeddedExtractor
 {
     private const string ResourcePrefix = "NekoLua.EmbeddedLua.";
     public static (int Extracted, int Skipped) ExtractAll()
@@ -22,7 +21,7 @@ public static class LuaEmbeddedExtractor
             return (0, 0);
         }
 
-        var targetRoot = LuaPaths.GlobalLibs;
+        var targetRoot = LuaPaths.GlobalDependencies;
         if (!targetRoot.Exists)
             targetRoot.Create();
 
