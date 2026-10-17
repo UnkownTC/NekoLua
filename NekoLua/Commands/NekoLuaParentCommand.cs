@@ -1,4 +1,5 @@
 using CommandSystem;
+using NekoLua.Api;
 using NekoLua.Api.Extensions;
 
 namespace NekoLua.Commands;
@@ -18,6 +19,13 @@ internal class NekoLuaParentCommand : ParentCommand
     }
     protected override bool ExecuteParent(ArraySegment<string> arguments, ICommandSender sender, out string response)
     {
+        if (!LuaPermissions.HasPermission(sender))
+        {
+            response =
+                $"权限不足！ 需要拥有权限：\n" +
+                $"  - ServerConsoleCommands 或 nekolua.manage（permissions.yml内容）";
+            return false;
+        }
         return CommandExtensions.ListSubCommands(this, arguments, out response);
     }
 }

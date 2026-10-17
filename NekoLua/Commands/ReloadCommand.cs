@@ -1,7 +1,7 @@
 using CommandSystem;
 
 using LabApi.Features.Console;
-
+using NekoLua.Api;
 using NekoLua.Loader;
 
 namespace NekoLua.Commands;
@@ -14,11 +14,11 @@ internal class ReloadCommand : ICommand
     public string Description { get; } = "重载 Lua 脚本（无参数=全部，或指定 mod 名）";
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
     {
-        if (!sender.CheckPermission(PlayerPermissions.ServerConsoleCommands))
+        if (!LuaPermissions.HasPermission(sender))
         {
             response =
                 $"权限不足！ 需要拥有权限：\n" +
-                $"  - ServerConsoleCommands";
+                $"  - ServerConsoleCommands 或 nekolua.manage（permissions.yml内容）";
             return false;
         }
         var mods = LuaModLoader.Mods;

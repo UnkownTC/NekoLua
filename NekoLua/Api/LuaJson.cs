@@ -6,14 +6,14 @@ namespace NekoLua.Api;
 
 internal static class LuaJson
 {
-    private const int MaxDepth = 128;
+    private const int MaxDepth = LuaConstants.MaxDepth;
 
     public static DynValue FromJson(Script script, string json)
     {
         var token = JToken.Parse(json);
         return FromToken(script, token);
     }
-    static DynValue FromToken(Script script, JToken token)
+    private static DynValue FromToken(Script script, JToken token)
     {
         switch (token.Type)
         {

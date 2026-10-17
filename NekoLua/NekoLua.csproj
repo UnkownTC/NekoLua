@@ -16,10 +16,12 @@
 		<PackageTags>scpsl;lua</PackageTags>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
-		<Copyright>© 2026 UnkownTC</Copyright>
+		<Copyright>© 2026 NekoLua</Copyright>
 		<PackageProjectUrl>https://github.com/UnkownTC/NekoLua</PackageProjectUrl>
-		<FileVersion>1.0.0.0</FileVersion>
+		<FileVersion>1.0.1.0</FileVersion>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<AssemblyVersion>1.0.1.0</AssemblyVersion>
+		<Version>1.0.1</Version>
 	</PropertyGroup>
 
 	<ItemGroup>

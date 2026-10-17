@@ -5,7 +5,7 @@ namespace NekoLua.Api;
 
 internal static class LuaXml
 {
-    private const int MaxDepth = 512;
+    private const int MaxDepth = LuaConstants.MaxDepth;
 
     public static DynValue FromXml(Script script, string xml)
     {
