@@ -27,14 +27,14 @@ kit.command("lua_core", "NekoLua 核心 API 抽查", function()
     s:eq("md5 长度", #crypto.md5("abc"), 32)
     s:truthy("crypto.uuid 合法", uuid.isValid(crypto.uuid()))
 
-    -- buffer
+    -- buffer（代理函数是普通函数，不是带 self 的方法，统一用点号调用）
     local buf = buffer.new()
-    buf:writeByte(65)
-    buf:writeInt32(123)
-    buf:reset()
-    s:eq("buffer readByte", buf:readByte(), 65)
-    s:eq("buffer readInt32", buf:readInt32(), 123)
-    s:truthy("buffer hex", #buf:hex() > 0)
+    buf.writeByte(65)
+    buf.writeInt32(123)
+    buf.reset()
+    s:eq("buffer readByte", buf.readByte(), 65)
+    s:eq("buffer readInt32", buf.readInt32(), 123)
+    s:truthy("buffer hex", #buf.hex() > 0)
 
     -- meta
     local source = { a = 1, nested = { b = 2 } }
@@ -97,10 +97,10 @@ kit.command("lua_core", "NekoLua 核心 API 抽查", function()
 
     -- pool
     local p = pool.new(2, function() return { n = 0 } end)
-    local obj = p:get()
-    p:release(obj)
-    s:eq("pool.size", p:size(), 1)
-    p:clear()
+    local obj = p.get()
+    p.release(obj)
+    s:eq("pool.size", p.size(), 1)
+    p.clear()
 
     local _, summary = s:finish()
     return summary

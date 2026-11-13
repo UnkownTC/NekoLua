@@ -87,6 +87,10 @@ lua_hr
 > **沙箱注意**：NekoLua 的 MoonSharp `Preset_HardSandbox` **不提供 `pcall` / `xpcall`**。
 > 测试库统一用 NekoLua 的 `try.attempt(fn)` 捕获异常（它会把异常转成 `{message, trace, type}` 表）。
 > 如果你在自己的脚本里写了 `pcall`，会得到 `attempt to call a nil value`。
+>
+> **调用风格**：NekoLua 的代理函数（`buffer.*`、`pool.*` 等）是**表字段函数**，不是带 `self` 的方法，
+> 统一用点号调用（`buf.writeByte(65)`、`p.release(obj)`）；用冒号会把表自己当成第一个参数。
+> 只有测试库自己的 `s:eq(...)` 这类是 Lua 方法，用冒号。
 
 ---
 

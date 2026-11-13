@@ -144,6 +144,7 @@ end
 -- 回调」之后回写 local 会触发 AssignLocal NRE；这里保持零 local，异常交给核心捕获。
 function M.command(name, description, handler)
     local function invoke(args, sender)
+        M.trace("command:" .. name)
         return true, tostring(handler(args, sender) or "OK")
     end
 
@@ -160,6 +161,13 @@ end
 function M.firstPlayer()
     local list = player.list()
     return #list > 0 and list[1] or nil
+end
+
+-- 追加一行到 mod 目录下的 trace.txt（用于定位 MoonSharp 崩溃点；file 表受路径守卫限制在 mod 目录内）。
+function M.trace(label)
+    if file ~= nil and file.append ~= nil then
+        file.append("trace.txt", tostring(label) .. "\n")
+    end
 end
 
 return M
