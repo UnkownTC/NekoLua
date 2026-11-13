@@ -131,6 +131,7 @@ public static class LuaLoader
         LuaTimer.CancelAll(mod);
         LuaScheduler.CancelAll(mod);
         LuaAsyncScheduler.CleanupFor(mod);
+        LuaCleanupRegistry.Cleanup(mod);
     }
     public static void Reload(LuaModInstance mod)
     {

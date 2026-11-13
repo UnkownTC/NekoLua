@@ -14,6 +14,29 @@ public sealed class LuaEventHook
     private static readonly List<LuaEventHook> _all = [];
 
     public static readonly Dictionary<string, Type> EventClasses = DiscoverEventClasses();
+
+    /// <summary>
+    /// 注册一个额外的事件类（扩展程序集用），Lua 侧即可 <c>eventhook.bind(luaName, 事件名, ...)</c>。
+    /// </summary>
+    /// <param name="luaName">Lua 侧引用名（小写，如 <c>astraplayer</c>）。</param>
+    /// <param name="eventsClass">含 public static 事件的静态类。</param>
+    /// <exception cref="ArgumentException">名称为空、类型无静态事件或与已有名称冲突。</exception>
+    public static void RegisterEventClass(string luaName, Type eventsClass)
+    {
+        if (string.IsNullOrWhiteSpace(luaName))
+            throw new ArgumentException("事件类名不能为空", nameof(luaName));
+
+        if (eventsClass is null)
+            throw new ArgumentNullException(nameof(eventsClass));
+
+        if (eventsClass.GetEvents(BindingFlags.Public | BindingFlags.Static).Length == 0)
+            throw new ArgumentException($"{eventsClass.FullName} 没有 public static 事件", nameof(eventsClass));
+
+        if (EventClasses.ContainsKey(luaName))
+            throw new ArgumentException($"事件类名 '{luaName}' 已被占用", nameof(luaName));
+
+        EventClasses[luaName] = eventsClass;
+    }
     private sealed class Binding
     {
         public required string Id;

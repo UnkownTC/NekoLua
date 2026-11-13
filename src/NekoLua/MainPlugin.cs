@@ -30,6 +30,7 @@ public class MainPlugin : Plugin<Config>
 
         LuaRegister.Clear();
         LuaRegister.Register(PluginAssembly);
+        LuaExtensionLoader.LoadAll();
         LuaGameObject.Create();
 
         LuaLoader.LoadAll();
@@ -55,6 +56,8 @@ public class MainPlugin : Plugin<Config>
         LuaWin32Native.ClearAll();
         LuaMainThread.Clear();
         LuaLoader.ClearAll();
+        LuaExtensionLoader.UnloadAll();
+        LuaCleanupRegistry.ClearAll();
 
         LuaGameObject.Destroy();
 
