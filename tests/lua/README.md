@@ -84,6 +84,10 @@ lua_hr
 - 网络 / 文件 / 进程 / Win32 / 音频文件等需要真实环境或外部资源的 API 只做了"缺失资源不崩"的冒烟，未做完整功能测试。
 - 需要游戏实体的断言（给玩家套角色、提示、效果）在无玩家时自动 SKIP，需进服后重跑 `lua_astra`。
 
+> **沙箱注意**：NekoLua 的 MoonSharp `Preset_HardSandbox` **不提供 `pcall` / `xpcall`**。
+> 测试库统一用 NekoLua 的 `try.attempt(fn)` 捕获异常（它会把异常转成 `{message, trace, type}` 表）。
+> 如果你在自己的脚本里写了 `pcall`，会得到 `attempt to call a nil value`。
+
 ---
 
 ## 4. 卸载

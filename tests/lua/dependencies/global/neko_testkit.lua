@@ -16,8 +16,15 @@ local function describe(value)
         return value
     end
 
-    local ok, text = pcall(tostring, value)
-    return ok and text or "<unprintable>"
+    return tostring(value)
+end
+
+local function errorText(err)
+    if type(err) == "table" then
+        return err.message or err.trace or tostring(err)
+    end
+
+    return tostring(err)
 end
 
 function M.new(name)
@@ -91,22 +98,23 @@ function M.new(name)
     end
 
     function suite:run(label, fn)
-        local ok, err = pcall(fn)
+        -- MoonSharp 的 Preset_HardSandbox 不提供 pcall，统一用 NekoLua 的 try.attempt。
+        local ok, err = try.attempt(fn)
         if ok then
             self:pass(label)
         else
-            self:fail(label, describe(err))
+            self:fail(label, errorText(err))
         end
     end
 
     function suite:throws(label, fn, needle)
-        local ok, err = pcall(fn)
+        local ok, err = try.attempt(fn)
         if ok then
             self:fail(label, "期望抛出异常，但成功返回")
             return
         end
 
-        local text = describe(err)
+        local text = errorText(err)
         if needle and string.find(text, needle, 1, true) == nil then
             self:fail(label, "异常不含 '" .. needle .. "'：" .. text)
         else
@@ -133,19 +141,30 @@ end
 
 -- 注册一个控制台 + RA 双端命令；handler 抛异常时返回失败给命令发送方。
 function M.command(name, description, handler)
+    local function invoke(args, sender)
+        -- pcall 不在硬沙箱里，用 try.attempt 包裹（它不带参数，所以用闭包转发）。
+        local okRun, result = try.attempt(function()
+            return handler(args, sender)
+        end)
+
+        if okRun then
+            if result == nil then
+                return true, "OK"
+            end
+
+            return true, tostring(result)
+        end
+
+        local message = errorText(result)
+        log.error(string.format("[%s] 测试命令异常: %s", name, message))
+        return false, message
+    end
+
     local ok = command.register({
         name = name,
         desc = description,
         usage = { name },
-        callback = function(args, sender)
-            local okRun, result = pcall(handler, args, sender)
-            if okRun then
-                return true, tostring(result or "OK")
-            end
-
-            log.error(string.format("[%s] 测试命令异常: %s", name, tostring(result)))
-            return false, tostring(result)
-        end,
+        callback = invoke,
     }, { "console", "remoteAdmin" })
 
     return ok
