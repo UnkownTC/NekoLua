@@ -1,9 +1,9 @@
 # NekoLua 流程图
 
 - **项目路径**：`src/NekoLua/`
-- **文档版本**：`v4`
-- **最后同步**：2026-10-02 @ `agent/task-212`（基线 `c84a906`）
-- **同步原因**：task-212 完整支持 LabAPI——`LuaTypeMapper` 增加静态方法/静态常量声明式绑定（`ScanStaticMethods` / `ScanStaticFields` / `IgnoreMethods` / `OnlyMethods` / `GuardWrites` / `GuardCalls` / `UseProxy`）与集合打包（`Array` / `IDictionary` / `IEnumerable` / `DirectoryInfo` / struct）；新增 `room` / `structure` / `hazard` / `respawn` / `pocket` / `scp914` / `permissions` / `reservedSlots` 8 张表，升级 `labapi` / `cassie` / `server` / `player` / `door` / `map` / `broadcast` / `decontamination`；全局表 65 → 73；`DeniedGlobalApis` 标签 5 → 13；新增 `LuaArgs` / `LuaTableFactory` 两个工具类
+- **文档版本**：`v5`
+- **最后同步**：2026-11-14 @ `0a00d81` + `31c72ec`（扩展装载点与 Astra 桥接）
+- **同步原因**：新增 `LuaExtensionLoader` / `ILuaExtension` / `LuaCleanupRegistry` 扩展装载与回收链；`LuaRegister.RegisterInstance` 拒绝重名；`LuaEventHook.RegisterEventClass` 支持扩展事件类；新增可选 `src/NekoLua.Astra` 桥接程序集（Astra 2.2.1，提供 `astra.*` 表）
 - **负责人**：WorkBuddy（deepseek-v4.1-flash）
 
 ---
@@ -19,7 +19,8 @@ flowchart TD
     E -- false --> G
     E -- true --> F["LuaEmbeddedExtractor.ExtractAll()<br/>内嵌 3 个 .lua → LuaPaths.GlobalLibs"]
     F --> G["LuaRegister.Clear() + Register(PluginAssembly)"]
-    G --> G1["反射扫描 IRegisterLua 实现<br/>Activator.CreateInstance"]
+    G --> G0["LuaExtensionLoader.LoadAll()<br/>扫描 extensions/*.dll<br/>IRegisterLua 注入 + ILuaExtension"]
+    G0 --> G1["反射扫描 IRegisterLua 实现<br/>Activator.CreateInstance"]
     G1 --> H["LuaGameObject.Create()<br/>常驻 GameObject + LuaComponent"]
     H --> I["LuaLoader.LoadAll()"]
     I --> J["七个 ClearAll()<br/>CommandHook/EventHook/EventBus/Timer<br/>Regex/NetworkManager/Scheduler"]
@@ -58,7 +59,8 @@ flowchart TD
 | `MainPlugin.Enable()` | `MainPlugin.cs` | 唯一启动入口，按固定顺序初始化；任一步抛异常则插件加载失败 |
 | `LoadConfigs()` | `MainPlugin.cs` `LoadConfigs()` | 调 `base.LoadConfigs()`，随后把 `Config` 快照进 `CacheConfig`；运行期读配置一律用 `CacheConfig` |
 | `LuaEmbeddedExtractor.ExtractAll()` | `Loader/LuaEmbeddedExtractor.cs` | 遍历 `GetManifestResourceNames()` 取 `NekoLua.EmbeddedLua.*.lua`，以 UTF-8 **无 BOM** 写入 `LuaPaths.GlobalLibs`；受 `ExtractEmbeddedLua` / `OverwriteEmbeddedLua` 门控 |
-| `LuaRegister.Register()` | `Registers/LuaRegister.cs` | 反射扫描程序集内 `IRegisterLua` 实现并实例化；跳过 abstract / interface / 值类型 / 非 class |
+| `LuaRegister.Register()` | `Registers/LuaRegister.cs` | 反射扫描程序集内 `IRegisterLua` 实现并实例化；跳过 abstract / interface / 值类型 / 非 class；全局表名重复时拒绝注册 |
+| `LuaExtensionLoader.LoadAll()` | `Loader/LuaExtensionLoader.cs` | 扫描 `LuaPaths.Extensions`（`NekoLua/extensions`）下的 DLL，实例化 `IRegisterLua`（新增全局表）与 `ILuaExtension`（OnLoad/OnUnload）；单个 DLL / 类型失败只记日志 |
 | `LuaGameObject.Create()` | `Dependencies/LuaGameObject.cs` | 建常驻 `GameObject`（`NekoLua`）+ `LuaComponent`，`DontDestroyOnLoad`；**唯一每帧驱动点** |
 | 七个 `ClearAll()` | `Loader/LuaLoader.cs` `LoadAll()` | 保证重载不残留旧钩子；顺序：CommandHook → EventHook → EventBus → Timer → Regex → NetworkManager → Scheduler |
 | `LoadScope(GlobalMods)` / `LoadScope(Mods)` | `Loader/LuaLoader.cs` | 先全局后端口专属；目录不存在时先 `Create()` 再返回 |
@@ -106,7 +108,7 @@ stateDiagram-v2
 | `Reloading` | `File.ReadAllText` + `LoadString` | 同上 | 成功后 `CleanupMod` → `RunEntry`；语法错误则**不动**旧状态 |
 | `Unloading` | `Disable()` | 同上 | 按序：`LuaRegister.Clear` → `LuaTimer.ClearAll` → `LuaEventHook.ClearAll` → `LuaCommandHook.ClearAll` → `LuaEventBus.ClearAll` → `LuaNetworkManager.ClearAll` → `LuaScheduler.ClearAll` → `LuaAsyncScheduler.ClearAll` → `LuaRegexProxy.ClearAll` → `LuaWin32Native.ClearAll` → `LuaMainThread.Clear` → `LuaLoader.ClearAll` → `LuaGameObject.Destroy` → `Instance = null!` / `PluginAssembly = null!` |
 
-**关键约束**：`CleanupMod(mod)` 的回收顺序固定为 `LuaEventHook` → `LuaCommandHook` → `LuaEventBus` → `LuaRegexProxy` → `LuaNetworkManager` → `LuaTimer.CancelAll` → `LuaScheduler.CancelAll` → `LuaAsyncScheduler.CleanupFor`。新增任何「按 owner 持有资源」的子系统时，必须同时在这两处登记，否则热重载必然泄漏。
+**关键约束**：`CleanupMod(mod)` 的回收顺序固定为 `LuaEventHook` → `LuaCommandHook` → `LuaEventBus` → `LuaRegexProxy` → `LuaNetworkManager` → `LuaTimer.CancelAll` → `LuaScheduler.CancelAll` → `LuaAsyncScheduler.CleanupFor` → `LuaCleanupRegistry`。新增任何「按 owner 持有资源」的子系统时，必须同时在这两处登记，否则热重载必然泄漏；扩展程序集则通过 `LuaCleanupRegistry.Register(mod, action)` 接入这条链（动作须可重复执行）。
 
 ---
 
@@ -190,6 +192,7 @@ flowchart TD
 | Newtonsoft.Json 13.0.4 | 引用（NuGet） | `LuaJson`、`LuaObjectProxy` | JSON 表不可用 | — |
 | NVorbis 0.10.5 | 引用（NuGet） | `Proxies/SubLibs/LuaNvorbisProxy` | `nvorbis` 表不可用 | `Config.EnableNvorbis = false` 可关闭 |
 | `System.Net.Http` 4.3.4 | 引用（NuGet） | `Proxies/Net/LuaHttpProxy` | `http` 表不可用 | — |
+| AstraFramework（可选，仅 `NekoLua.Astra`） | 引用（编译期，`libs/astra/2.2.1/`） | `src/NekoLua.Astra/*` | 桥接 DLL 不加载 / `astra.available=false` | 核心不引用；扩展目录扫描失败只记日志 |
 | 文件系统（`SecretLab/NekoLua`） | 双向（读写） | `LuaPaths`、`LuaEmbeddedExtractor`、`file`/`directory` 表 | 目录不可写则插件加载失败；运行期读写失败由脚本处理 | `LuaPathGuard` 双层（`BlockedPaths` 硬拒绝 + `AllowedPaths` 放行），默认只能访问自身 mod 目录；`ExtractEmbeddedLua=false` 跳过解压 |
 | 网络（HTTP/TCP/UDP/WS/FTP） | 出向 | `Proxies/Net/*` | 连接失败由脚本处理 | `EnableNetwork` / `EnableFtp` 总开关；`MaxConnectionsPerMod` 限流；`BlockPrivateNetworkTargets` 阻断私网/环回/云元数据 |
 | 操作系统进程与原生调用 | 出向（默认关） | `Proxies/Interop/*`、`LuaProcessProxy` | 主机被脚本控制 | `EnableProcess=false`、`EnableWin32=false` 默认关闭；`Win32FunctionBlacklist`（进程创建/内存读写/模块加载）硬拒绝、`Win32AllowPointerArgs=false`；`ProcessWhitelist` 支持全路径强模式 |
@@ -204,6 +207,7 @@ flowchart TD
 | 2026-10-01 | `agent/task-214`（基线 `7f6dcdd`） | 资源耗尽类修复：Update 链补 `LuaAsyncScheduler.Tick`；`CleanupMod`/`Disable` 清理链收口；新增序列化深度/循环引用、regex 超时、解压/响应体配额、TCP/FTP 超时、UDP 字节限幅、runSync 超时等宿主上限；连接计数修复后 `MaxConnectionsPerMod` 真实生效 | §1 / §2 / §3 |
 | 2026-10-02 | `agent/task-212`（基线 `c84a906`） | 安全边界与授权类修复：`LuaPathGuard` 由系统目录黑名单改为「mod 作用域白名单 + `AllowedPaths`」；新增 `LuaNetworkGuard`（SSRF 私网/环回/元数据阻断）与 `LuaGlobalApiGuard`（全服 API 标签门禁）；`server.runCommand` 加 `AllowScriptRunCommand` + 前缀白名单 + 审计日志；`nekolua refresh` 补 `ServerConsoleCommands` 权限；命令失败文案改固定话术；Win32 加函数黑名单与指针实参拒绝；FTP 本地路径纳入 `LuaPathGuard`；SpeakerToy `controllerId` 改为动态分配 | §2 / §3 / §4 |
 | 2026-10-02 | `agent/task-212`（基线 `c84a906`） | 完整支持 LabAPI：`LuaTypeMapper` 增加静态方法/常量声明式绑定与集合打包；新增 `room` / `structure` / `hazard` / `respawn` / `pocket` / `scp914` / `permissions` / `reservedSlots` 8 张表；升级 `labapi` / `cassie` / `server` / `player` / `door` / `map` / `broadcast` / `decontamination`；全局表 65 → 73，门禁标签 5 → 13，新增 `LuaArgs` / `LuaTableFactory` | §1 / §2 / §3 / §4 |
+| 2026-11-14 | `0a00d81`（核心）+ `31c72ec`（桥接） | 新增扩展装载点：`extensions/*.dll` 扫描、`IRegisterLua` 注入、`ILuaExtension` 生命周期、`LuaCleanupRegistry` 回收链、`LuaEventHook.RegisterEventClass`；新增可选 `NekoLua.Astra` 桥接（Astra 2.2.1 实例注册） | §1 / §2 / §4 |
 
 ---
 

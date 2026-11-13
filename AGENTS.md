@@ -23,13 +23,15 @@ NekoLua 是 SCP: Secret Laboratory 服务端 Lua 脚本插件（LabAPI + MoonSha
 |---|---|---|
 | `AGENTS.md` | 本文件：协作与提交约定 | 每次动手前 |
 | `src/NekoLua/FLOW.md` | 加载流程与执行模型（权威流程图） | 改 Loader / 调度时 |
-| `src/NekoLua/Loader/` | Lua 引擎启动、路径解析、Mod 实例 | 改加载链路时 |
+| `src/NekoLua/Loader/` | Lua 引擎启动、路径解析、Mod 实例、扩展装载（`LuaExtensionLoader`） | 改加载链路时 |
+| `src/NekoLua.Astra/` | 可选桥接工程：AstraFramework → Lua（`astra.*`），核心不引用 | 改 `astra.*` 时 |
 | `src/NekoLua/Proxies/` | 暴露给 Lua 的代理对象（`Lua*Proxy`） | 新增/修改 API 时 |
 | `src/NekoLua/Registers/` | 代理注册入口（`IRegisterLua` 实现） | 注册新代理时 |
 | `src/NekoLua/Dependencies/` | 基础设施：调度、事件总线、守卫、序列化 | 改底层工具时 |
 | `src/NekoLua/Commands/` | RA 指令 | 加指令时 |
 | `libs/` | 只读依赖（游戏与 LabAPI 程序集） | 需要新引用时 |
 | `tools/vsbuild.py` | 构建入口（net481 必需） | 每次构建 |
+| `docs/` | 扩展契约与桥接方案（`EXTENSIONS.md` / `ASTRA-EXTENSION.md`） | 加扩展 / 写文档时 |
 | `artifacts/` | 构建产物与中间文件（不提交） | 排查失败时 |
 
 ---
@@ -80,6 +82,10 @@ NekoLua 是 SCP: Secret Laboratory 服务端 Lua 脚本插件（LabAPI + MoonSha
 ```bash
 dotnet restore src/NekoLua/NekoLua.csproj
 python tools/vsbuild.py src/NekoLua/NekoLua.csproj -p:Configuration=Release -p:Platform=x64
+
+# 可选桥接（需要 libs/astra/2.2.1/Astra.Framework.dll）
+dotnet restore src/NekoLua.Astra/NekoLua.Astra.csproj
+python tools/vsbuild.py src/NekoLua.Astra/NekoLua.Astra.csproj -p:Configuration=Release -p:Platform=x64
 ```
 
 | 要求 | 强度 |

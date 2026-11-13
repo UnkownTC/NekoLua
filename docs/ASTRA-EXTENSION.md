@@ -1,8 +1,26 @@
-# NekoLua × AstraFramework 扩展方案（设计稿 v0.1）
+# NekoLua × AstraFramework 扩展方案（v1 已实现）
 
-> 状态：设计稿，未实现。2026-11-13。
-> 基线：NekoLua `1.0.0`（本仓库）/ AstraFramework `2.1.0`（`D:\Userdata\Documents\AstraFramework`）。
-> 一句话：**可行，但必须同时动三处**——Astra 补公开的「实例注册/注销」API（2.2.0），NekoLua 补一个最小的扩展装载钩子，桥接逻辑放独立 `NekoLua.Astra.dll`（不能是 LabAPI 插件）。
+> 状态：**v1 已实现**（核心 `0a00d81`，桥接 `31c72ec`）。2026-11-14。
+> 基线：NekoLua `1.0.0`（本仓库）/ AstraFramework `2.2.1`。
+> 一句话：Lua 通过 `astra.*` 声明 `CustomTeam` / `CustomRole` / `CustomWave` 并操作它们；桥接是独立 `NekoLua.Astra.dll`，放 `NekoLua/extensions/`，核心不引用 Astra。
+
+## 实现状态（2026-11-14）
+
+| 项 | 状态 |
+|---|---|
+| Astra 侧实例注册/注销（2.2.0）+ 按波次数量 / Table 可覆写 / 自动注册豁免（2.2.1） | 已完成（Astra 仓库） |
+| NekoLua 扩展装载点（`extensions/`、`IRegisterLua` 注入、`ILuaExtension`、`LuaCleanupRegistry`、`RegisterEventClass`） | 已完成 |
+| 桥接 v1：`astra.team/role/wave` + `astra.hint/audio/countdown/effect` | 已完成 |
+| 热重载（同 Id 换定义、延迟一帧注销）、按 mod 回收、主线程校验、守卫标签 | 已完成 |
+| `astra.ability`（v2）、`astra.effect.define`（v2）、`astra.item`（v3）、`astra.patch`（不做） | 未实现 |
+| 实机冒烟（游戏内加载示例 mod） | 待服务端验证 |
+
+与设计稿的差异：
+
+1. Astra 实际发布 **2.2.1**（设计稿写 2.2.0）：额外提供 `IWaveSpawnCountProvider`（按波次数量）与 `[DisableAutoRegister]` 内容豁免。
+2. Astra 不可用时**不是没有 `astra` 表**，而是 `astra.available = false`、调用抛明确错误（扩展装载器仍然实例化了表提供者）。
+3. `astra.role.define` 的定义回调 v1 只支持 `on_added` / `on_removed`；其它事件用 `eventhook.bind("astraplayer", "Shooting", ...)` 或 LabAPI 事件。
+4. 波次刷新数量：`wave_count` 为统一数量；需要按波次不同数量时用 `wave_counts = { ["waveId"] = n }`。
 
 ---
 
@@ -108,7 +126,7 @@ LabAPI OnServerPluginsEnabled
 
 ---
 
-## 4. AstraFramework 上游改动（建议 2.2.0，MINOR）
+## 4. AstraFramework 上游改动（已落地 2.2.0 / 2.2.1，MINOR）
 
 > 只加 API，不改现有签名；存量 C# 模板行为不变。
 
@@ -155,7 +173,7 @@ public static class CustomWaveApi
 
 `SetRoleSpawner` 保留（兼容），新增 `AddRoleSpawner` 内部用 `List<ICustomWaveRoleSpawner>` 顺序尝试。桥接注册的 spawner 只处理自己注册表里存在的角色 Id，返回 false 让链继续。
 
-### 4.4 建议同期做的小改（可选项）
+### 4.4 同期落地的小改（2.2.1）
 
 - `CustomWave.Table` 改成 `virtual`，或在 `IWaveSpawnRole` 增加 `int GetWaveSpawnCount(CustomWave wave)`——解决 A5「多波次同数量」的硬伤。不做的代价：Lua 侧只能声明「角色属于哪些波次 + 统一数量」。
 - `AutoRegister.RegisterType` 对 `[DisableAutoRegister]` 的 `CustomRole/Team/Wave` 也跳过——给外部桥接多一层保险（桥接本身不在插件程序集里，但用户可能手抖把 DLL 扔进 `plugins/`）。
@@ -258,7 +276,7 @@ eventhook.bind("astraplayer", "Shooting", "no_friendly_fire", function(ev) ... e
 
 | 项 | 值 |
 |---|---|
-| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/2.2.0/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
+| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/2.2.1/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
 | 目标框架 | `net481`，`PlatformTarget=x64` |
 | 构建 | 复用 `tools/vsbuild.py` 形态，独立 csproj |
 | 部署 | 只放 `NekoLua/extensions/`；**不要**放 `plugins/`（见 A1/A2） |
@@ -396,7 +414,7 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 | 场景 | 行为 |
 |---|---|
 | Astra 程序集不存在 | `OnLoad` Error，返回不注册；Lua 侧没有 `astra` 表 |
-| Astra < 2.2 | 同上，日志写明「需要 AstraFramework >= 2.2.0」 |
+| Astra < 2.2.1 | 同上，日志写明「需要 AstraFramework >= 2.2.1」 |
 | 定义字段非法 | 抛 `ScriptRuntimeException`，错误带字段名 |
 | Id 重复（不同 mod） | 第二个 define 抛异常，提示占用者 |
 | 同 mod 同 Id 重定义 | 替换定义，返回成功 |
@@ -412,7 +430,7 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 
 ```lua
 astra.available          -- boolean，桥接可用
-astra.version            -- "2.2.0"（Astra 版本）
+astra.version            -- "2.2.1"（Astra 版本）
 astra.api_version        -- 1
 astra.flush()            -- 手动提交（调试用）
 ```
@@ -516,9 +534,8 @@ astra.wave.define{
 }
 
 -- 每 120 秒刷一次
-timer.create("chaos_wave_timer", 120, function()
+timer.every(120, "chaos_wave_timer", function()
   astra.wave.spawn("chaos_wave", player.list())
-  return true
 end)
 ```
 
