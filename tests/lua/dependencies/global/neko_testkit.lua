@@ -27,6 +27,31 @@ local function errorText(err)
     return tostring(err)
 end
 
+-- 注意：这两个 helper 必须独立于 try.attempt 所在的帧。
+-- MoonSharp 2.0.0 在「C# 回调内嵌套调用 Lua」之后，若原帧随后回写 local 会抛
+-- AssignLocal NRE/IndexOutOfRange；因此 try.attempt 所在函数只做尾调用，不声明 local。
+local function classifyRun(suite, label, ok, err)
+    if ok then
+        suite:pass(label)
+    else
+        suite:fail(label, errorText(err))
+    end
+end
+
+local function classifyThrows(suite, label, needle, ok, err)
+    if ok then
+        suite:fail(label, "期望抛出异常，但成功返回")
+        return
+    end
+
+    local text = errorText(err)
+    if needle and string.find(text, needle, 1, true) == nil then
+        suite:fail(label, "异常不含 '" .. needle .. "'：" .. text)
+    else
+        suite:pass(label)
+    end
+end
+
 function M.new(name)
     local suite = {
         name = name,
@@ -98,28 +123,12 @@ function M.new(name)
     end
 
     function suite:run(label, fn)
-        -- MoonSharp 的 Preset_HardSandbox 不提供 pcall，统一用 NekoLua 的 try.attempt。
-        local ok, err = try.attempt(fn)
-        if ok then
-            self:pass(label)
-        else
-            self:fail(label, errorText(err))
-        end
+        -- 尾调用：本帧不声明 local，避开 MoonSharp 嵌套回调后的 AssignLocal 崩溃。
+        return classifyRun(self, label, try.attempt(fn))
     end
 
     function suite:throws(label, fn, needle)
-        local ok, err = try.attempt(fn)
-        if ok then
-            self:fail(label, "期望抛出异常，但成功返回")
-            return
-        end
-
-        local text = errorText(err)
-        if needle and string.find(text, needle, 1, true) == nil then
-            self:fail(label, "异常不含 '" .. needle .. "'：" .. text)
-        else
-            self:pass(label)
-        end
+        return classifyThrows(self, label, needle, try.attempt(fn))
     end
 
     function suite:finish()
