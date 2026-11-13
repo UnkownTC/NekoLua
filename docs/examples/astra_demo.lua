@@ -45,6 +45,8 @@ astra.wave.define {
     id = "chaos_wave",
     name = "混沌波次",
     teams = { "chaos_elite" },
+    weight = 5,               -- 3.1+：加权调度权重
+    min_players = 4,          -- 3.1+：触发所需最少存活人数
     announcement = "混沌精英入场",
     spawn_protect = true,
     spawn_protect_duration = 8,
