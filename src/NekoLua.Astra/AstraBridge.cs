@@ -34,9 +34,6 @@ internal enum ContentState
 
     /// <summary>所属 mod 已被清理，等待「一帧后确认」的注销。</summary>
     Orphaned,
-
-    /// <summary>多次注册失败（Id 冲突 / 依赖缺失），不再重试。</summary>
-    Failed,
 }
 
 internal sealed class ModContent
@@ -51,7 +48,8 @@ internal sealed class ContentEntry
     public ContentKind Kind;
     public string Id = string.Empty;
     public ContentState State;
-    public int Attempts;
+    public bool Warned;
+    public bool WasRegistered;
     public ModContent Owner = null!;
     public object? Adapter;
     public TeamDefinition? Team;
@@ -86,6 +84,7 @@ internal static class AstraBridge
     private static bool _flushed;
     private static bool _shuttingDown;
     private static int _mainThreadId;
+    private static int _retry;
 
     public static bool Available => _available;
 
@@ -100,6 +99,7 @@ internal static class AstraBridge
     {
         _mainThreadId = Environment.CurrentManagedThreadId;
         _shuttingDown = false;
+        _retry = 0;
 
         try
         {
@@ -168,8 +168,11 @@ internal static class AstraBridge
             _bootstrap = null;
         }
 
-        foreach (var entry in _entries.Values.ToArray())
+        foreach (var entry in Ordered())
         {
+            if (!entry.WasRegistered)
+                continue;
+
             try
             {
                 UnregisterEntry(entry);
@@ -189,6 +192,7 @@ internal static class AstraBridge
         _entries.Clear();
         _mods.Clear();
         _flushed = false;
+        _retry = 0;
         _colorCache.Clear();
     }
 
@@ -283,11 +287,20 @@ internal static class AstraBridge
             }
         }
 
-        _flushed = true;
+        _flushed = !_entries.Values.Any(e => e.State == ContentState.Pending);
 
-        var pending = _entries.Values.Count(e => e.State == ContentState.Pending);
-        if (pending > 0)
-            Logger.Warn($"[NekoLua.Astra] 仍有 {pending} 条内容等待 Astra 初始化，将在下次定义时重试");
+        if (_flushed)
+        {
+            _retry = 0;
+            return;
+        }
+
+        // Astra 初始化晚于插件就绪事件时（极端加载顺序），下一帧再试，最多 5 次。
+        if (_retry < 5)
+        {
+            _retry++;
+            _ = LuaMainThread.Queue(Flush);
+        }
     }
 
     /// <summary>把玩家套用为指定自定义角色（波次生成器入口）。</summary>
@@ -365,8 +378,13 @@ internal static class AstraBridge
 
             apply(existing);
 
-            if (existing.State == ContentState.Orphaned)
+            if (existing.State == ContentState.Orphaned && existing.WasRegistered)
                 existing.State = ContentState.Registered;   // 下一帧的注销检查会跳过
+            else if (existing.State == ContentState.Orphaned)
+                existing.State = ContentState.Pending;
+
+            if (_flushed && existing.State != ContentState.Registered)
+                _ = TryRegister(existing);
 
             return existing;
         }
@@ -402,17 +420,15 @@ internal static class AstraBridge
         if (ok)
         {
             entry.State = ContentState.Registered;
+            entry.WasRegistered = true;
             return true;
         }
 
-        entry.Attempts++;
-
-        if (entry.Attempts >= 3)
+        if (!entry.Warned)
         {
-            entry.State = ContentState.Failed;
-            Logger.Error(
-                $"[NekoLua.Astra] {entry.Kind} '{entry.Id}' 注册失败（可能是 Id 与 C# 内容冲突，" +
-                "或 Astra 尚未完成初始化），已放弃重试");
+            entry.Warned = true;
+            Logger.Warn(
+                $"[NekoLua.Astra] {entry.Kind} '{entry.Id}' 暂未注册成功（Astra 尚未初始化或 Id 冲突），将随 Flush 重试");
         }
 
         return false;
@@ -430,7 +446,7 @@ internal static class AstraBridge
 
         foreach (var entry in content.Entries)
         {
-            if (entry.State != ContentState.Registered)
+            if (entry.State == ContentState.Orphaned)
                 continue;
 
             entry.State = ContentState.Orphaned;
@@ -443,22 +459,29 @@ internal static class AstraBridge
 
     private static void Sweep(ModContent content)
     {
-        foreach (var entry in content.Entries.ToArray())
+        // 注销顺序必须与依赖方向相反：角色 → 波次 → 阵营（Astra 拒绝注销仍被波次引用的阵营）。
+        foreach (var kind in UnregisterOrder)
         {
-            if (entry.State != ContentState.Orphaned)
-                continue;
-
-            try
+            foreach (var entry in content.Entries.ToArray())
             {
-                UnregisterEntry(entry);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"[NekoLua.Astra] 注销 {entry.Kind} '{entry.Id}' 失败: {ex.Message}");
-            }
+                if (entry.Kind != kind || entry.State != ContentState.Orphaned)
+                    continue;
 
-            _ = _entries.Remove(entry.Id);
-            _ = content.Entries.Remove(entry);
+                if (entry.WasRegistered)
+                {
+                    try
+                    {
+                        UnregisterEntry(entry);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"[NekoLua.Astra] 注销 {entry.Kind} '{entry.Id}' 失败: {ex.Message}");
+                    }
+                }
+
+                _ = _entries.Remove(entry.Id);
+                _ = content.Entries.Remove(entry);
+            }
         }
 
         if (content.Entries.Count > 0)
@@ -467,6 +490,21 @@ internal static class AstraBridge
         _ = _mods.Remove(content.Mod.ModDir);
         LuaCleanupRegistry.Forget(content.Mod);
         content.Cache.Dispose();
+    }
+
+    private static readonly ContentKind[] UnregisterOrder =
+        [ContentKind.Role, ContentKind.Wave, ContentKind.Team];
+
+    private static IEnumerable<ContentEntry> Ordered()
+    {
+        foreach (var kind in UnregisterOrder)
+        {
+            foreach (var entry in _entries.Values.ToArray())
+            {
+                if (entry.Kind == kind)
+                    yield return entry;
+            }
+        }
     }
 
     private static void UnregisterEntry(ContentEntry entry)
