@@ -20,7 +20,7 @@
 
 与设计稿的差异：
 
-1. Astra 实际发布 **2.2.1**（设计稿写 2.2.0）：额外提供 `IWaveSpawnCountProvider`（按波次数量）与 `[DisableAutoRegister]` 内容豁免。
+1. Astra 实际从 **2.2.1** 起步（设计稿写 2.2.0）：额外提供 `IWaveSpawnCountProvider`（按波次数量）与 `[DisableAutoRegister]` 内容豁免；当前基线已到 **3.3.1**（见状态表）。
 2. Astra 不可用时**不是没有 `astra` 表**，而是 `astra.available = false`、调用抛明确错误（扩展装载器仍然实例化了表提供者）。
 3. `astra.role.define` 的定义回调 v1 只支持 `on_added` / `on_removed`；其它事件用 `eventhook.bind("astraplayer", "Shooting", ...)` 或 LabAPI 事件。
 4. 波次刷新数量：`wave_count` 为统一数量；需要按波次不同数量时用 `wave_counts = { ["waveId"] = n }`。
@@ -120,7 +120,7 @@ NekoLua/
 ```
 Astra.Enable()                     → 注册 MainManager（Priority=Highest，先于 NekoLua）
 NekoLua.Enable()
-  ├ LuaExtensionLoader.LoadAll()   → Assembly.LoadFrom + new IRegisterLua() + OnLoad()
+  ├ LuaExtensionLoader.LoadAll()   → Assembly.Load(byte[]) + new IRegisterLua() + OnLoad()
   └ LuaLoader.LoadAll()            → 每个 mod 执行 main.lua；astra.*.define 只入队（Pending）
 所有插件 Enable 完毕
 LabAPI OnServerPluginsEnabled
@@ -131,7 +131,7 @@ LabAPI OnServerPluginsEnabled
 
 ---
 
-## 4. AstraFramework 上游改动（已落地 2.2.x / 3.0.x / 3.2.x）
+## 4. AstraFramework 上游改动（已落地 2.2.x / 3.0.x / 3.2.x / 3.3.x）
 
 > 只加 API，不改现有签名；存量 C# 模板行为不变。
 
@@ -585,6 +585,8 @@ end)
 
 ## 10. 落地路线与验证
 
+> 状态：P0–P4 全部已完成，桥接基线为 Astra 3.3.1。
+
 | 阶段 | 内容 | 验证 |
 |---|---|---|
 | P0 | Astra 2.2：实例注册/注销 + spawner 链 + 事件注销 | Astra 自身 `dotnet test`/`vsbuild`；`customrole list` 前后一致；API.md 重新生成 |
@@ -609,17 +611,15 @@ print(astra.role.get(p) ~= nil)
 
 **风险**
 
-1. **Astra 上游 API 变动**：桥接编译期绑定 2.2 签名，升级即需重编；建议桥接只调用新增的 5 个入口，其余全走已有公开查询 API。
-2. **Initialize 早退**（A4）：只要有人绕过 Flush 提前注册，C# 模板会整体消失。上线前必须加一条启动自检（Astra 模板数 > 0）。
+1. **Astra 上游 API 变动**：桥接编译期绑定 Astra 3.3.1 签名（Entry 模型）；升级需同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与桥接代码，低于下限会直接 `astra.available=false`。
+2. **Initialize 早退**（A4）：只要有人绕过 Flush 提前注册，C# 模板会整体消失；桥接自身守住了时序，但挡不住第三方扩展抢跑。当前未做模板数启动自检，出现时表现为原版 C# 模板消失，需按 Flush 顺序排查。
 3. **注销与玩家实例**：`Unregister` 只清模板，玩家身上的实例要调用方自己摘；桥接已内置，但 C# 侧直接用新 API 的人容易忘。
-4. **程序集不可卸载**：`LoadFrom` 后 DLL 锁死，桥接更新需重启服务端；`OnUnload` 必须把静态状态清干净，`OnLoad` 必须幂等。
-5. **单槽 spawner**：老版本 Astra 上若已有其它宿主占用，波次生成会静默失败；必须记 Error 并提示。
+4. **程序集不可卸载**：NekoLua 用 `Assembly.Load(byte[])` 装载扩展，DLL 文件不再被锁、运行期可直接覆盖；但已加载的旧代码要重启（或重新启用 NekoLua 插件）才会换新。`OnUnload` 必须把静态状态清干净，`OnLoad` 必须幂等；扩展也不能依赖 `extensions/` 里的其它 DLL。
+5. **单槽 spawner**：Astra 3.x 仍是全局单槽角色生成器；若已有其它宿主占用，波次生成会静默失败，桥接会记 Error。
 6. **性能**：定义解析在 define 时一次完成；运行期只做字典查找。`Role.Team` 每次构造 `TeamRef`，可缓存但不要缓存 `CustomTeam` 实例（跨回合复用没问题，但最好按 Id 查）。
 
-**待定**
+**开放问题**
 
-1. 桥接放哪个仓库：`NekoLua/src/NekoLua.Astra/`（同仓、独立构建）还是独立仓库？（倾向同仓，便于同步契约）
-2. Astra 2.2 是否接受「实例注册」形态，还是倾向「工厂注册」`Register(Func<CustomRole>)`？（实例更简单，工厂更省内存）
-3. v1 是否必须带 `ability`？如果玩法依赖按键技能，需要把 v2 提前，工作量 +500 行左右。
-4. 波次数量是否要 per-wave？要做就一起改 `IWaveSpawnRole`（A5）。
-5. 桥接是否默认启用？建议默认启用（DLL 存在即启用），用 `DeniedGlobalApis` 细粒度关闭。
+1. **后续 Astra 版本的兼容上限**：桥接只校验最低版本（3.3.1），4.0 若再改 Entry / 注册模型需要重新适配；升级前关注 Astra 发布说明。
+2. **per-wave 角色数量**：目前 `wave_count` 统一值 + `wave_counts` 覆盖；更细粒度取决于 Astra 上游 `IWaveSpawnCountProvider` 的演进（A5）。
+3. **v2 ability / v3 item**：v1 已明确不做；是否投入取决于玩法是否真的需要按键技能 / 自定义物品（各约 +500 行）。

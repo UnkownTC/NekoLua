@@ -11,7 +11,7 @@
 | 40 | `40_core_api` | base64 / csv / regex / crypto / buffer / meta / encoding / bit / random / datetime / version / uuid / vector3 / mathx / template / try / pool | `lua_core` |
 | 50 | `50_hotreload` | `nekolua reload` 后的 timer / eventhook / eventbus / Astra 内容回收 | `lua_hr` |
 
-Astra 相关插件需要：`NekoLua.Astra.dll` 在 `NekoLua/extensions/`，AstraFramework >= 3.2.0。
+Astra 相关插件需要：`NekoLua.Astra.dll` 在 `NekoLua/extensions/`，AstraFramework >= 3.3.1（低于此版本桥接会直接 `astra.available=false`）。
 
 ---
 
@@ -64,7 +64,7 @@ lua_hr       # 热重载
 - 每条 PASS 出现在服务器控制台（`[LuaMod-<mod>]` 前缀）；
 - 最后一行是汇总：`<suite>：通过 N / 失败 0 / 跳过 M`；
 - `10_astra_content` 在没有在线玩家时会有 3 条 SKIP，属于正常；
-- `lua_err` 里的"红色日志"是测试主动触发的异常被 `pcall` 捕获，最终汇总应为失败 0。
+- `lua_err` 里的"红色日志"是测试主动触发的异常被 `try.attempt` 捕获，最终汇总应为失败 0。
 
 热重载验证：
 
@@ -87,6 +87,13 @@ lua_hr
 > **沙箱注意**：NekoLua 的 MoonSharp `Preset_HardSandbox` **不提供 `pcall` / `xpcall`**。
 > 测试库统一用 NekoLua 的 `try.attempt(fn)` 捕获异常（它会把异常转成 `{message, trace, type}` 表）。
 > 如果你在自己的脚本里写了 `pcall`，会得到 `attempt to call a nil value`。
+>
+> **尾调用限制**：MoonSharp 2.0 对 `return f(a, ..., try.attempt(fn))`（尾调用 + 多返回值展开）解析有缺陷，
+> 会误报 `attempt to call a string value`。测试库统一先 `local ok, err = try.attempt(fn)` 再转发；
+> 自己写辅助函数时也不要图省事写成尾调用。
+>
+> **定位崩溃**：`10_astra_content` 每个步骤前会 `kit.trace(...)` 写 `mods/global/10_astra_content/trace.txt`；
+> 失败时先看最后一行标记，定位到具体调用。
 >
 > **调用风格**：NekoLua 的代理函数（`buffer.*`、`pool.*` 等）是**表字段函数**，不是带 `self` 的方法，
 > 统一用点号调用（`buf.writeByte(65)`、`p.release(obj)`）；用冒号会把表自己当成第一个参数。

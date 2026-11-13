@@ -211,6 +211,7 @@ flowchart TD
 | 2026-11-14 | Astra 3.0.1 适配 | 桥接改用 Entry 模型：`ItemEntry` 初始物品（支持自定义物品 Id）、`TeamRef` 波次阵营（原版/自定义混编）、`RoleEntry` 刷新表；生成器实现 `ICustomWaveRoleSpawnerV2`；最低 Astra 版本 3.0.1 | §4 |
 | 2026-11-14 | Astra 3.2.0 适配 | `astra.wave.define` 增加 `weight` / `min_players` / `max_players`（`LuaCustomWave` 实现 `IWeightedWave`，可被 `WaveScheduler` / `SupportWavePool` 使用）；最低 Astra 版本 3.2.0 | §4 |
 | 2026-11-14 | Astra 3.3.1 适配 | 依赖升级 `libs/astra/3.3.1/`；修复 `CustomRole.RemoveRole` 守卫，`OnRemoved` 与角色属性回收恢复；桥接最低版本 3.3.1 | §4 |
+| 2026-11-14 | `0672651` | 扩展装载改为 `Assembly.Load(byte[])`（不再锁定 DLL，覆盖后重启 / 重新启用生效）；扩展之间不保证程序集解析，不能依赖 `extensions/` 内其它 DLL | §2 / §4 |
 
 ---
 

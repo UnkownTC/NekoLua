@@ -98,7 +98,7 @@ python tools/vsbuild.py src/NekoLua.Astra/NekoLua.Astra.csproj -p:Configuration=
 
 **注意**：`net481` + 公开化程序集必须走 `tools/vsbuild.py`；`dotnet build` 会报 MSB4803。
 
-产物：`artifacts/build/NekoLua/x64/Release/NekoLua.dll`
+产物：`artifacts/build/NekoLua/x64/Release/net481/NekoLua.dll`
 
 ---
 

@@ -55,6 +55,9 @@ python tools/vsbuild.py src/NekoLua.Astra/NekoLua.Astra.csproj -p:Configuration=
 详见 [docs/EXTENSIONS.md](docs/EXTENSIONS.md)；Astra 桥接方案见
 [docs/ASTRA-EXTENSION.md](docs/ASTRA-EXTENSION.md)。
 
+> 扩展 DLL 用 `Assembly.Load(byte[])` 装载（不锁文件，可覆盖后重启生效），因此不要依赖
+> `extensions/` 里的其它扩展 DLL；详见 `docs/EXTENSIONS.md` §7。
+
 ## 测试
 
 [tests/lua/](tests/lua/README.md) 是一组可部署到 `NekoLua/mods/` 的测试插件（运行时冒烟、

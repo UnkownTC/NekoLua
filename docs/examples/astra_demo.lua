@@ -1,6 +1,6 @@
 -- NekoLua.Astra 示例：自定义阵营 / 角色 / 波次
 -- 部署：SecretLab/NekoLua/mods/<端口>/astra_demo/main.lua
--- 前置：NekoLua/extensions/NekoLua.Astra.dll + AstraFramework >= 2.2.1
+-- 前置：NekoLua/extensions/NekoLua.Astra.dll + AstraFramework >= 3.3.1
 
 if astra == nil or not astra.available then
     print("[astra_demo] astra 不可用: " .. tostring(astra and astra.version))
@@ -33,10 +33,11 @@ astra.role.define {
     waves = { "chaos_wave" },
     wave_counts = { ["chaos_wave"] = 2 },
     on_added = function(ply)
-        astra.hint.show(ply, "你是混沌精英", "CenterTop", 5)
+        -- 显式传 id，on_removed 用同一个 id 清理（不传 id 时桥接会生成并返回新 id）
+        astra.hint.show(ply, "你是混沌精英", "CenterTop", 5, 20, "chaos_elite_hint")
     end,
     on_removed = function(ply)
-        astra.hint.clear(ply, "chaos_elite_role")
+        astra.hint.clear(ply, "chaos_elite_hint")
     end,
 }
 
