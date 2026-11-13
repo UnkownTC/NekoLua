@@ -3,6 +3,9 @@
 
 local kit = require("neko_testkit")
 
+-- 兼容旧版 testkit（没有 trace 时退化为空操作）
+local trace = kit.trace or function() end
+
 if astra == nil or not astra.available then
     log.error("[10_astra_content] astra 不可用，请确认 AstraFramework >= 3.2.0 与 NekoLua.Astra.dll")
     return
@@ -65,10 +68,10 @@ kit.command("lua_astra", "Astra 桥接内容与运行时测试", function()
     local s = kit.new("10_astra_content")
 
     file.write("trace.txt", "")
-    kit.trace("start")
+    trace("start")
 
     astra.flush()
-    kit.trace("flushed")
+    trace("flushed")
 
     s:truthy("astra.available", astra.available)
     s:truthy("astra.version 非空", type(astra.version) == "string" and #astra.version > 0)
@@ -83,14 +86,14 @@ kit.command("lua_astra", "Astra 桥接内容与运行时测试", function()
 
     -- 空玩家表 + 波次表为空：返回空数组且不抛错
     s:eq("wave.spawn 空玩家", #astra.wave.spawn("kit_wave", {}), 0)
-    kit.trace("after-wave-spawn")
+    trace("after-wave-spawn")
 
     -- 事件类扩展
     s:run("eventhook astraplayer 绑定/解绑", function()
         eventhook.bind("astraplayer", "Shooting", "kit_astra_evt", function() end)
         eventhook.unbind("kit_astra_evt")
     end)
-    kit.trace("after-eventhook")
+    trace("after-eventhook")
 
     -- 倒计时
     local countdownId = astra.countdown.start(0.1, function()
@@ -98,55 +101,55 @@ kit.command("lua_astra", "Astra 桥接内容与运行时测试", function()
     end)
     s:typeIs("countdown.start 返回 id", countdownId, "number")
     astra.countdown.cancel(countdownId)
-    kit.trace("after-countdown")
+    trace("after-countdown")
 
     -- 音频（缺失文件应返回 0 而不是抛错）
     s:run("audio.play 缺失文件", function()
         astra.audio.play("kit_missing_audio.ogg")
     end)
-    kit.trace("after-audio")
+    trace("after-audio")
 
     -- 以下需要在线玩家
     local ply = kit.firstPlayer()
-    kit.trace("after-firstPlayer ply=" .. tostring(ply ~= nil))
+    trace("after-firstPlayer ply=" .. tostring(ply ~= nil))
     if ply == nil then
         s:skip("role.give/get/remove", "没有在线玩家")
         s:skip("hint.show/clear", "没有在线玩家")
         s:skip("effect.apply/remove", "没有在线玩家")
     else
-        kit.trace("before-give")
+        trace("before-give")
         s:truthy("role.give", astra.role.give(ply, "kit_role"))
-        kit.trace("after-give")
+        trace("after-give")
 
         s:eq("role.get", astra.role.get(ply).id, "kit_role")
-        kit.trace("after-get")
+        trace("after-get")
 
         s:truthy("on_added 回调", storage.get("kit_role_added") == true)
-        kit.trace("after-onadded-check")
+        trace("after-onadded-check")
 
         s:run("hint.show/clear", function()
             astra.hint.show(ply, "NekoLua 测试提示", "CenterTop", 2)
             astra.hint.clear(ply, "kit_hint")
         end)
-        kit.trace("after-hint")
+        trace("after-hint")
 
         s:run("effect.apply/remove", function()
             astra.effect.apply(ply, { { effect = "Bleeding", intensity = 1, duration = 1 } })
             astra.effect.remove(ply, { { effect = "Bleeding", intensity = 1, duration = 1 } })
         end)
-        kit.trace("after-effect")
+        trace("after-effect")
 
-        kit.trace("before-remove")
+        trace("before-remove")
         astra.role.remove(ply)
-        kit.trace("after-remove")
+        trace("after-remove")
 
         s:falsy("role.remove 后 get", astra.role.get(ply) ~= nil)
         s:truthy("on_removed 回调", storage.get("kit_role_removed") == true)
-        kit.trace("after-gameplay-block")
+        trace("after-gameplay-block")
     end
 
     local _, summary = s:finish()
-    kit.trace("finish")
+    trace("finish")
     return summary
 end)
 
