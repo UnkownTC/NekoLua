@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <Configurations>Debug;Release</Configurations>
+    <AssemblyName>NekoLua.Astra</AssemblyName>
+    <RootNamespace>NekoLua.AstraBridge</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 核心契约：IRegisterLua / ILuaExtension / LuaObjectCache / LuaArgs（只引用公开 API） -->
+    <ProjectReference Include="..\NekoLua\NekoLua.csproj" Private="false" />
+    <PackageReference Include="MoonSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Astra 2.2.1 只读依赖：实例注册/注销与 spawner 链均在此版本引入 -->
+    <Reference Include="Astra.Framework">
+      <HintPath>$(LibsRoot)astra\2.2.1\Astra.Framework.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- 与 NekoLua.csproj 保持同一套 LabAPI / 游戏 / Unity 引用（运行时由服务端提供） -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(LibsRoot)PublicizedAssemblies\Assembly-CSharp-Publicized.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(LibsRoot)scpsl-server\current\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="LabApi">
+      <HintPath>$(LibsRoot)PublicizedAssemblies\LabApi-Publicized.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="HintServiceMeow-Publicized">
+      <HintPath>$(LibsRoot)PublicizedAssemblies\HintServiceMeow-Publicized.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SecretLabNAudio.Core">
+      <HintPath>$(LibsRoot)audio\current\SecretLabNAudio.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="CommandSystem.Core">
+      <HintPath>$(LibsRoot)scpsl-server\current\CommandSystem.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Mirror">
+      <HintPath>$(LibsRoot)scpsl-server\current\Mirror.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="NorthwoodLib">
+      <HintPath>$(LibsRoot)scpsl-server\current\NorthwoodLib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Pooling">
+      <HintPath>$(LibsRoot)scpsl-server\current\Pooling.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(LibsRoot)unity\current\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(LibsRoot)unity\current\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

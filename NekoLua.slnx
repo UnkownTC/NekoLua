@@ -3,5 +3,8 @@
     <Project Path="src/NekoLua/NekoLua.csproj">
       <Platform Solution="*|x64" Project="x64" />
     </Project>
+    <Project Path="src/NekoLua.Astra/NekoLua.Astra.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
   </Folder>
 </Solution>
