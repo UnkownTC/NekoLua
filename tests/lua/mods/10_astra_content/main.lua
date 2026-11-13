@@ -7,7 +7,7 @@ local kit = require("neko_testkit")
 local trace = kit.trace or function() end
 
 if astra == nil or not astra.available then
-    log.error("[10_astra_content] astra 不可用，请确认 AstraFramework >= 3.2.0 与 NekoLua.Astra.dll")
+    log.error("[10_astra_content] astra 不可用，请确认 AstraFramework >= 3.3.1 与 NekoLua.Astra.dll")
     return
 end
 

@@ -3,6 +3,7 @@
 > 状态：**v1.3 已实现**（核心 `0a00d81`，桥接 `31c72ec`；已适配 Astra 3.3.1）。2026-11-14。
 > 基线：NekoLua `1.0.0`（本仓库）/ AstraFramework `3.3.1`。
 > 一句话：Lua 通过 `astra.*` 声明 `CustomTeam` / `CustomRole` / `CustomWave` 并操作它们；桥接是独立 `NekoLua.Astra.dll`，放 `NekoLua/extensions/`，核心不引用 Astra。
+> Lua 侧参考手册见 [API-ASTRA.md](API-ASTRA.md)；NekoLua 核心 API 见 [API.md](API.md)。
 
 ## 实现状态（2026-11-14）
 
@@ -285,7 +286,7 @@ eventhook.bind("astraplayer", "Shooting", "no_friendly_fire", function(ev) ... e
 | 目标框架 | `net481`，`PlatformTarget=x64` |
 | 构建 | 复用 `tools/vsbuild.py` 形态，独立 csproj |
 | 部署 | 只放 `NekoLua/extensions/`；**不要**放 `plugins/`（见 A1/A2） |
-| 失败姿态 | Astra 缺失/版本低 → `OnLoad` 记 Error 并拒绝注册（Lua 侧 `astra == nil`）；绝不半加载 |
+| 失败姿态 | Astra 缺失/版本低 → `OnLoad` 记 Error，Lua 侧 `astra` 表仍存在但 `available=false`，方法调用报最低版本；绝不半加载 |
 
 ### 6.2 定义模型（Lua 表 → 不可变 C# 定义）
 
@@ -431,6 +432,8 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 
 ## 7. Lua API 设计
 
+> 本节保留设计阶段的接口取舍与示例；**逐项签名、默认值与错误语义以 [API-ASTRA.md](API-ASTRA.md) 为准**。
+
 ### 7.1 元信息
 
 ```lua
@@ -445,14 +448,14 @@ astra.flush()            -- 手动提交（调试用）
 ```lua
 astra.team.define{
   id = "chaos_elite", name = "混沌精英", color = "#FF8800",
-  relation = "custom",              -- custom / all_friendly / all_hostile
+  relation = "Custom",              -- Custom / AllFriendly / AllHostile（忽略大小写）
   vanilla_team = "ChaosInsurgency", -- 原版锚点
   keep_vanilla = false,             -- 未命中名单时是否沿用原版关系
-  hostile = { "Mtf", "NineTailedFox" },  -- RoleTypeId / Team / Faction / 自定义阵营 Id
+  hostile = { "NineTailedFox" },    -- 原版 Team / Faction 名或自定义阵营 Id
   friendly = { "ChaosInsurgency" },
 }
 astra.team.find("chaos_elite")   -- 句柄（只读字段）
-astra.team.list()                -- { id = {...}, ... }
+astra.team.list()                -- 数组，元素是阵营句柄
 ```
 
 ### 7.3 角色
@@ -469,7 +472,7 @@ astra.role.define{
   scale = {1,1,1}, gravity = {0,-9.8,0},
   spawn_flags = "All", change_reason = "Respawn",
   waves = { "chaos_wave" }, wave_count = 2,   -- 2 / -1=填充剩余
-  on_added   = function(ply) ply.health = 200 end,
+  on_added   = function(ply) print("added", ply.nickname) end,
   on_removed = function(ply) end,
 }
 
@@ -487,7 +490,7 @@ astra.wave.define{
   id = "chaos_wave", name = "混沌波次",
   teams = { "chaos_elite" },          -- 自定义阵营 Id 或原版 Team 名，可混编
   -- table = { ["chaos_elite_shotgunner"] = 2, ["ChaosRifleman"] = 2 },  -- 覆盖角色侧刷新型
-  weight = 5, min_players = 4, max_players = -1,   -- 3.1+：加权波次 / 人数门槛（-1 = 不限）
+  weight = 5, min_players = 4, max_players = -1,   -- 3.2+：加权波次 / 人数门槛（-1 = 不限）
   announcement = "混沌精英入场",
   spawn_protect = true, spawn_protect_duration = 8,
   modify_threat = true, threat = 1.2,
@@ -496,7 +499,7 @@ astra.wave.define{
 astra.wave.spawn("chaos_wave", player.list())  -- 返回实际生成的玩家表
 astra.wave.find("chaos_wave")
 
--- 3.1+ 加权调度器（每个 mod 独立句柄，不影响其它插件）
+-- 3.2+ 加权调度器（每个 mod 独立句柄，不影响其它插件）
 local sched = astra.wave.scheduler()
 sched.load({ "chaos_wave", "mtf_wave" })          -- 按 weight 排序
 local nextWave = sched.advance()                   -- 返回满足 min_players 的波次句柄或 nil
@@ -512,9 +515,9 @@ sched.reset()
 | 级别 | API | 说明 |
 |---|---|---|
 | v1 | `astra.hint.show(ply, text, position, duration, font_size?, id?)` → messageId / `astra.hint.clear(ply, id)` | 包 `HintApi`；未传 id 时桥接自动生成并返回，`clear` 必须用同一个 id（HintServiceMeow 对空/不存在 id 会抛 NRE） |
-| v1 | `astra.audio.play(ply_or_nil, file, volume)` / `astra.audio.stop(...)` | 包 `AudioApi`，全局/单人两态 |
+| v1 | `astra.audio.play(file, volume?)`（全服）或 `astra.audio.play(ply, file, volume?)` / `astra.audio.stop([ply])` | 包 `AudioApi`，全服/单人两态；全服时第一个参数直接给文件路径 |
 | v1 | `astra.countdown.start(delay, cb, tick_cb, repeat_cb)` / `astra.countdown.cancel(id)` | 包 `CountdownApi`；`repeat` 回调返回 true 表示继续 |
-| v1 | `astra.wave.scheduler()` → `load/advance/current/remaining/reset/support_register/support_pick` | 3.1+ 加权调度器与支援池；句柄按 mod 独立 |
+| v1 | `astra.wave.scheduler()` → `load/advance/current/remaining/reset/support_register/support_pick` | 3.2+ 加权调度器与支援池；句柄按 mod 独立 |
 | v1 | `astra.effect.apply(ply, { {effect="Bleeding", intensity=1, duration=5} })` / `remove` | 只做 `EffectEntry.Vanilla`，自定义效果需 C# |
 | 未实现 | `astra.token.*` | 取消令牌语义与 Lua 生命周期不匹配，暂不暴露（v2 候选） |
 | v2 | `astra.ability.define{...}` | 适配 `StandardAbility`：键位/冷却/条件/触发回调；需要按键槽位与客户端设置下发 |
@@ -572,8 +575,8 @@ end)
 
 | 条件 | 表现 |
 |---|---|
-| Astra 未安装 | NekoLua 正常启动，`astra` 表不存在；依赖脚本需 `if astra == nil` |
-| Astra < 2.2 | 桥接拒绝加载，日志明确提示最低版本 |
+| Astra 未安装 | NekoLua 正常启动；`astra` 表存在但 `available=false`，调用报“需要 AstraFramework >= 3.3.1” |
+| Astra < 3.3.1 | 同上；桥接不注册事件类与角色生成器，日志明确提示最低版本 |
 | NekoLua 旧版（无扩展钩子） | 桥接无法被加载（文件不被扫描），无副作用 |
 | 定义冲突（跨 mod） | 后者 define 报错，前者不受影响 |
 | reload 期间 | 定义热替换，玩家角色保留；一帧后确认无重定义才注销 |
@@ -589,7 +592,7 @@ end)
 
 | 阶段 | 内容 | 验证 |
 |---|---|---|
-| P0 | Astra 2.2：实例注册/注销 + spawner 链 + 事件注销 | Astra 自身 `dotnet test`/`vsbuild`；`customrole list` 前后一致；API.md 重新生成 |
+| P0 | Astra 2.2：实例注册/注销 + spawner 链 + 事件注销 | Astra 自身 `dotnet test`/`vsbuild`；`customrole list` 前后一致；签名与 API 文档一致 |
 | P1 | NekoLua 核心：extensions 目录 + 装载器 + 回收表 + 事件类注册 + 守卫标签 | 无额外 DLL 时构建/启动行为不变；坏 DLL 不影响主流程 |
 | P2 | 桥接 v1：team/role/wave + hint/audio/countdown/effect | 示例 mod 实机：给角色、看血量/物品/阵营敌对、刷波次 |
 | P3 | 热重载与回收 | `reload` 两次后 `astra.role.list()` 数量不变；删 mod + `refresh` 后角色消失且玩家被摘除 |

@@ -52,8 +52,9 @@ python tools/vsbuild.py src/NekoLua.Astra/NekoLua.Astra.csproj -p:Configuration=
 | `NekoLua.Loader.ILuaExtension` | 生命周期回调（`OnLoad` / `OnUnload`） |
 | `NekoLua.Dependencies.LuaCleanupRegistry` | 按 mod 登记清理动作，随 `reload`/`refresh`/`Disable` 回收 |
 
-详见 [docs/EXTENSIONS.md](docs/EXTENSIONS.md)；Astra 桥接方案见
-[docs/ASTRA-EXTENSION.md](docs/ASTRA-EXTENSION.md)。
+完整 API 见 **[docs/API.md](docs/API.md)**（Lua 全局表与 C# 扩展契约）；
+扩展开发详见 [docs/EXTENSIONS.md](docs/EXTENSIONS.md)；Astra 桥接见
+[docs/API-ASTRA.md](docs/API-ASTRA.md) 与 [docs/ASTRA-EXTENSION.md](docs/ASTRA-EXTENSION.md)（设计/时序）。
 
 > 扩展 DLL 用 `Assembly.Load(byte[])` 装载（不锁文件，可覆盖后重启生效），因此不要依赖
 > `extensions/` 里的其它扩展 DLL；详见 `docs/EXTENSIONS.md` §7。

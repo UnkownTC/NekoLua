@@ -2,6 +2,7 @@
 
 > 状态：v1（随 `0a00d81` 起可用）
 > 适用：想在不修改 NekoLua 核心的前提下，给 Lua 增加新能力的插件作者。
+> 参考：[NekoLua API 参考](API.md)（Lua 全局表清单与 `LuaObjectProxy` 语义） · [Astra 桥接 API](API-ASTRA.md)
 
 ## 1. 这是什么
 
