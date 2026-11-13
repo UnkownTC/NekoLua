@@ -70,8 +70,8 @@ internal static class AstraBridge
 {
     public const int ApiVersion = 1;
 
-    /// <summary>桥接要求的最低 Astra 版本（3.0 起 Entry 化：ItemEntry / RoleEntry / TeamRef / WaveSpawnEntry）。</summary>
-    public static readonly Version MinimumAstraVersion = new(3, 0, 1);
+    /// <summary>桥接要求的最低 Astra 版本（3.2 起提供加权波次 / 支援池 / 原版波次标记）。</summary>
+    public static readonly Version MinimumAstraVersion = new(3, 2, 0);
 
     private static readonly Dictionary<string, ContentEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, ModContent> _mods = new(StringComparer.OrdinalIgnoreCase);

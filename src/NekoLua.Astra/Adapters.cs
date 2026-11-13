@@ -160,8 +160,8 @@ internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider
     protected override void OnRemoved(Player player) => AstraBridge.InvokeCallback(_id, Def.OnRemoved, player);
 }
 
-/// <summary>Lua 定义的波次适配器。</summary>
-internal sealed class LuaCustomWave : CustomWave
+/// <summary>Lua 定义的波次适配器（3.1+ 同时实现加权波次契约）。</summary>
+internal sealed class LuaCustomWave : CustomWave, IWeightedWave
 {
     private readonly string _id;
     private readonly WaveDefinition _fallback;
@@ -202,6 +202,12 @@ internal sealed class LuaCustomWave : CustomWave
             return teams;
         }
     }
+
+    public int Weight => Def.Weight;
+
+    public int MinPlayers => Def.MinPlayers;
+
+    public int MaxPlayers => Def.MaxPlayers;
 
     public override bool ModifyThreat => Def.ModifyThreat;
 

@@ -239,6 +239,99 @@ public sealed class AstraRegister : IRegisterLua
             return DynValue.NewTable(array);
         });
 
+        // 3.1+ 加权调度器句柄：每个 mod 自行创建，互不影响。
+        t["scheduler"] = DynValue.NewCallback((_, _) =>
+        {
+            const string api = "astra.wave.scheduler()";
+            EnsureAvailable(api);
+            EnsureMainThread(api);
+            Guard("astra.wave", api);
+
+            var scheduler = new WaveScheduler(() => Player.Count);
+            var handle = new Table(script);
+
+            handle["load"] = DynValue.NewCallback((_, args) =>
+            {
+                const string loadApi = "scheduler.load(ids)";
+                EnsureMainThread(loadApi);
+
+                var ids = RequireTable(args, 0, loadApi);
+                List<CustomWave> waves = [];
+
+                foreach (var item in LuaSpec.Sequence(ids))
+                {
+                    if (item.Type != DataType.String)
+                        throw new ScriptRuntimeException($"{loadApi}: 每一项都必须是波次 Id");
+
+                    waves.Add(CustomWaveApi.Find(item.String)
+                        ?? throw new ScriptRuntimeException($"{loadApi}: 找不到波次 '{item.String}'"));
+                }
+
+                return DynValue.NewNumber(scheduler.Load(waves));
+            });
+
+            handle["advance"] = DynValue.NewCallback((_, args) =>
+            {
+                const string advanceApi = "scheduler.advance(playerCount?)";
+                EnsureMainThread(advanceApi);
+
+                int? playerCount = args.Count > 0 && args[0].Type == DataType.Number
+                    ? (int)args[0].Number
+                    : null;
+
+                var wave = scheduler.Advance(playerCount);
+                return wave is null ? DynValue.Nil : content.Cache.Wrap(wave);
+            });
+
+            handle["current"] = DynValue.NewCallback((_, _) =>
+            {
+                EnsureMainThread("scheduler.current()");
+                return scheduler.Current is null ? DynValue.Nil : content.Cache.Wrap(scheduler.Current);
+            });
+
+            handle["remaining"] = DynValue.NewCallback((_, _) =>
+            {
+                EnsureMainThread("scheduler.remaining()");
+                return DynValue.NewNumber(scheduler.Remaining);
+            });
+
+            handle["reset"] = DynValue.NewCallback((_, _) =>
+            {
+                EnsureMainThread("scheduler.reset()");
+                scheduler.Reset();
+                return DynValue.Nil;
+            });
+
+            handle["support_register"] = DynValue.NewCallback((_, args) =>
+            {
+                const string registerApi = "scheduler.support_register(id, weight?)";
+                EnsureMainThread(registerApi);
+
+                var id = RequireString(args, 0, registerApi);
+                var weight = args.Count > 1 && args[1].Type == DataType.Number ? (int)args[1].Number : 0;
+                var wave = CustomWaveApi.Find(id)
+                    ?? throw new ScriptRuntimeException($"{registerApi}: 找不到波次 '{id}'");
+
+                scheduler.Support.Register(wave, weight);
+                return DynValue.True;
+            });
+
+            handle["support_pick"] = DynValue.NewCallback((_, args) =>
+            {
+                const string pickApi = "scheduler.support_pick(playerCount?)";
+                EnsureMainThread(pickApi);
+
+                var playerCount = args.Count > 0 && args[0].Type == DataType.Number
+                    ? (int)args[0].Number
+                    : Player.Count;
+
+                var wave = scheduler.Support.Pick(playerCount);
+                return wave is null ? DynValue.Nil : content.Cache.Wrap(wave);
+            });
+
+            return DynValue.NewTable(handle);
+        });
+
         return t;
     }
 

@@ -49,6 +49,9 @@ internal sealed class WaveDefinition
     public string Id = string.Empty;
     public string Name = string.Empty;
     public string[] Teams = [];
+    public int Weight;
+    public int MinPlayers;
+    public int MaxPlayers = -1;
     public bool ModifyThreat = true;
     public float Threat = -1f;
     public bool SpawnProtect = true;
@@ -127,6 +130,9 @@ internal static class DefinitionParser
             Id = RequireId(t, ctx),
             Name = LuaSpec.RequiredString(t, "name", ctx),
             Teams = LuaSpec.OptionalStringArray(t, "teams", ctx),
+            Weight = (int)LuaSpec.OptionalNumber(t, "weight", ctx, 0f),
+            MinPlayers = (int)LuaSpec.OptionalNumber(t, "min_players", ctx, 0f),
+            MaxPlayers = (int)LuaSpec.OptionalNumber(t, "max_players", ctx, -1f),
             ModifyThreat = LuaSpec.OptionalBool(t, "modify_threat", ctx, true),
             Threat = LuaSpec.OptionalNumber(t, "threat", ctx, -1f),
             SpawnProtect = LuaSpec.OptionalBool(t, "spawn_protect", ctx, true),
