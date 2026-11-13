@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Platforms>AnyCPU;x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <Configurations>Debug;Release</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MoonSharp" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Northwood.LabAPI" />
+    <PackageReference Include="NVorbis" />
+    <PackageReference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 原工程按「公开化 / 非公开化」混用引用，此处保持原状：
+         公开化程序集会把 protected 成员提升为 public，故重写了 protected 成员的
+         CommandSystem.Core 必须引用非公开化版本（libs/scpsl-server/current/）。 -->
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(LibsRoot)scpsl-server/current/Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(LibsRoot)PublicizedAssemblies/Assembly-CSharp-Publicized.dll</HintPath>
+    </Reference>
+    <Reference Include="CommandSystem.Core">
+      <HintPath>$(LibsRoot)scpsl-server/current/CommandSystem.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="LabApi">
+      <HintPath>$(LibsRoot)PublicizedAssemblies/LabApi-Publicized.dll</HintPath>
+    </Reference>
+    <Reference Include="Mirror">
+      <HintPath>$(LibsRoot)scpsl-server/current/Mirror.dll</HintPath>
+    </Reference>
+    <Reference Include="NorthwoodLib">
+      <HintPath>$(LibsRoot)scpsl-server/current/NorthwoodLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Pooling">
+      <HintPath>$(LibsRoot)scpsl-server/current/Pooling.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(LibsRoot)unity/current/Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(LibsRoot)unity/current/UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(LibsRoot)unity/current/UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(LibsRoot)unity/current/UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources\EmbeddedLua\*.lua">
+      <LogicalName>NekoLua.EmbeddedLua.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,543 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PoolingLib</name>
+    </assembly>
+    <members>
+        <member name="T:PoolingLib.BasePool`1">
+            <summary>
+            一个基础的池化类，可以继承该类创建其他对象池
+            </summary>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="P:PoolingLib.BasePool`1.Pool">
+            <summary>
+            对象池
+            </summary>
+        </member>
+        <member name="F:PoolingLib.BasePool`1._pool">
+            <summary>
+            受保护的对象池，主要用于执行归还和获取操作
+            </summary>
+        </member>
+        <member name="M:PoolingLib.BasePool`1.#ctor">
+            <summary>
+            受保护的实例创建
+            </summary>
+        </member>
+        <member name="M:PoolingLib.BasePool`1.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.BasePool`1.Return(`0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.BasePool`1.Release(`0)">
+            <summary>
+            归还对象到对象池内
+            </summary>
+            <param name="obj">要归还的对象</param>
+        </member>
+        <member name="T:PoolingLib.BasePool`2">
+            <summary>
+            一个基础的池化类，可以继承该类创建其他对象池，该池化类内置了允许自定义的静态池
+            </summary>
+            <typeparam name="TPool">池类型</typeparam>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="P:PoolingLib.BasePool`2.Pool">
+            <summary>
+            对象池
+            </summary>
+        </member>
+        <member name="F:PoolingLib.BasePool`2._pool">
+            <summary>
+            受保护的对象池，主要用于执行归还和获取操作
+            </summary>
+        </member>
+        <member name="M:PoolingLib.BasePool`2.#ctor">
+            <summary>
+            受保护的实例创建
+            </summary>
+        </member>
+        <member name="M:PoolingLib.BasePool`2.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.BasePool`2.Return(`1)">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.BasePool`2.Release(`1)">
+            <summary>
+            归还对象到对象池内
+            </summary>
+            <param name="obj">要归还的对象</param>
+        </member>
+        <member name="T:PoolingLib.Extensions.PoolExtensions">
+            <summary>
+            对象池扩展类
+            </summary>
+        </member>
+        <member name="M:PoolingLib.Extensions.PoolExtensions.ReturnTo``1(``0,PoolingLib.IPool{``0})">
+            <summary>
+            将对象归还至指定的对象池
+            </summary>
+            <typeparam name="TObject">对象池的泛型</typeparam>
+            <param name="obj">要归还的对象</param>
+            <param name="pool">目标对象池</param>
+        </member>
+        <member name="M:PoolingLib.Extensions.PoolExtensions.ReturnTo(System.Text.StringBuilder,System.Boolean)">
+            <summary>
+            将<see cref="T:System.Text.StringBuilder"/>归还至指定的对象池
+            </summary>
+            <param name="sb">要归还的<see cref="T:System.Text.StringBuilder"/></param>
+            <param name="toString">是否返回文本</param>
+            <returns><see cref="T:System.Text.StringBuilder"/>转化成的文本，如果<see href="toString"/>参数为<see langword="false"/>则返回空字符串</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.ICapacityPool`1">
+            <summary>
+            一个对象池的附属接口，用于实现对象池内创建初始容量对象
+            </summary>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.ICapacityPool`1.Get(System.Int32)">
+            <summary>
+            获取一个有初始容量的对象，如果池内没有则新建这个对象
+            </summary>
+            <param name="capacity">默认的初始容量</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="T:PoolingLib.IPool`1">
+            <summary>
+            一个对象池接口，用于实现对象池
+            </summary>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.IPool`1.Get">
+            <summary>
+            获取一个对象，如果池内没有则新建这个对象
+            </summary>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.IPool`1.Return(`0)">
+            <summary>
+            归还对象到对象池内
+            </summary>
+            <param name="obj">要归还的对象</param>
+        </member>
+        <member name="T:PoolingLib.Pools.CollectionPool`1">
+            <summary>
+            <see cref="T:System.Collections.ObjectModel.Collection`1"/>对象池
+            </summary>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.CollectionPool`1.Get(System.Collections.Generic.IList{`0})">
+            <summary>
+            获取一个有初始内容的集合，如果池内没有则新建
+            </summary>
+            <param name="list">初始的内容</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.CollectionPool`1.Return(System.Collections.ObjectModel.Collection{`0})">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.CollectionPool`1.ToArrayReturn(System.Collections.ObjectModel.Collection{`0})">
+            <summary>
+            将<see cref="T:System.Collections.ObjectModel.Collection`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="collection">要返还的栈</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.CollectionPool`1.ToArrayRelease(System.Collections.ObjectModel.Collection{`0})">
+            <summary>
+            将<see cref="T:System.Collections.ObjectModel.Collection`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="collection">要返还的栈</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.ConcurrentBagPool`1">
+            <summary>
+            <see cref="T:System.Collections.Concurrent.ConcurrentBag`1"/>对象池
+            </summary>
+            <typeparam name="TObject">元素的类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.ConcurrentBagPool`1.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.ConcurrentBagPool`1.Get(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            获取一个有初始内容的<see cref="T:System.Collections.Concurrent.ConcurrentBag`1"/>，如果池内没有则新建
+            </summary>
+            <param name="collection">初始的内容</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.ConcurrentBagPool`1.Return(System.Collections.Concurrent.ConcurrentBag{`0})">
+            <summary>
+            归还对象到对象池内
+            </summary>
+            <param name="bag">要归还的对象</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.ConcurrentBagPool`1.ToArrayReturn(System.Collections.Concurrent.ConcurrentBag{`0})">
+            <summary>
+            将 <see cref="T:System.Collections.Concurrent.ConcurrentBag`1"/> 转化为数组，同时返回至对象池
+            </summary>
+            <param name="bag">要返还的包</param>
+            <returns>包含包中所有元素的数组</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.ConcurrentBagPool`1.ToArrayRelease(System.Collections.Concurrent.ConcurrentBag{`0})">
+            <summary>
+            将 <see cref="T:System.Collections.Concurrent.ConcurrentBag`1"/> 转化为数组，同时返回至对象池
+            </summary>
+            <param name="bag">要返还的包</param>
+            <returns>包含包中所有元素的数组</returns>
+        </member>
+        <member name="T:PoolingLib.Pools.Dictionaries.DictionaryPool`2">
+            <summary>
+            <see cref="T:System.Collections.Generic.Dictionary`2"/>对象池
+            </summary>
+            <typeparam name="TKey">字典的<see langword="Key"/></typeparam>
+            <typeparam name="TValue">字典的<see langword="Value"/></typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.Dictionaries.DictionaryPool`2.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.Dictionaries.DictionaryPool`2.Get(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.Dictionaries.DictionaryPool`2.Return(System.Collections.Generic.Dictionary{`0,`1})">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.Dictionaries.DictionaryPool`2.ToArrayReturn(System.Collections.Generic.Dictionary{`0,`1})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.Dictionary`2"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="obj">要返还的字典</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.Dictionaries.DictionaryPool`2.ToArrayRelease(System.Collections.Generic.Dictionary{`0,`1})">
+            <summary>
+            将 <see cref="T:System.Collections.Generic.Dictionary`2"/> 转换为键值对数组，同时返回至对象池
+            </summary>
+            <param name="dict">要返还的字典</param>
+            <returns>键值对数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.Dictionaries.SortedDictionaryPool`2">
+            <summary>
+            <see cref="T:System.Collections.Generic.SortedDictionary`2"/>对象池
+            </summary>
+            <typeparam name="TKey">键类型</typeparam>
+            <typeparam name="TValue">值类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.Dictionaries.SortedDictionaryPool`2.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.Dictionaries.SortedDictionaryPool`2.Return(System.Collections.Generic.SortedDictionary{`0,`1})">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.Dictionaries.SortedDictionaryPool`2.ToArrayReturn(System.Collections.Generic.SortedDictionary{`0,`1})">
+            <summary>
+            将 <see cref="T:System.Collections.Generic.SortedDictionary`2"/> 转换为键值对数组，同时返回至对象池
+            </summary>
+            <param name="dict">要返还的字典</param>
+            <returns>键值对数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.Dictionaries.SortedDictionaryPool`2.ToArrayRelease(System.Collections.Generic.SortedDictionary{`0,`1})">
+            <summary>
+            将 <see cref="T:System.Collections.Generic.SortedDictionary`2"/> 转换为键值对数组，同时返回至对象池
+            </summary>
+            <param name="dict">要返还的字典</param>
+            <returns>键值对数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.LinkedListPool`1">
+            <summary>
+            <see cref="T:System.Collections.Generic.LinkedList`1"/>对象池
+            </summary>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.LinkedListPool`1.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.LinkedListPool`1.Get(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            获取一个有初始内容的<see cref="T:System.Collections.Generic.LinkedList`1"/>，如果池内没有则新建
+            </summary>
+            <param name="collection">初始的内容</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.LinkedListPool`1.Return(System.Collections.Generic.LinkedList{`0})">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.LinkedListPool`1.ToArrayReturn(System.Collections.Generic.LinkedList{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.LinkedList`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="list">要返还的哈希列表</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.LinkedListPool`1.ToArrayRelease(System.Collections.Generic.LinkedList{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.LinkedList`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="list">要返还的哈希列表</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.ListPool`1">
+            <summary>
+            <see cref="T:System.Collections.Generic.List`1"/>对象池
+            </summary>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.ListPool`1.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.ListPool`1.Get(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            获取一个有初始内容的<see cref="T:System.Collections.Generic.List`1"/>，如果池内没有则新建
+            </summary>
+            <param name="collection">初始的内容</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.ListPool`1.Get(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.ListPool`1.Return(System.Collections.Generic.List{`0})">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.ListPool`1.ToArrayReturn(System.Collections.Generic.List{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.List`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="list">要返还的列表</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.ListPool`1.ToArrayRelease(System.Collections.Generic.List{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.List`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="list">要返还的列表</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.MemoryStreamPool">
+            <summary>
+            <see cref="T:System.IO.MemoryStream"/>对象池
+            </summary>
+        </member>
+        <member name="M:PoolingLib.Pools.MemoryStreamPool.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.MemoryStreamPool.Get(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.MemoryStreamPool.Return(System.IO.MemoryStream)">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.MemoryStreamPool.ToByteArrayReturn(System.IO.MemoryStream)">
+            <summary>
+            将 <see cref="T:System.IO.MemoryStream"/> 转换为字节数组，同时返回至对象池
+            </summary>
+            <param name="ms">要返还的流</param>
+            <returns>包含当前流数据的字节数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.QueuePool`1">
+            <summary>
+            <see cref="T:System.Collections.Generic.Queue`1"/>对象池
+            </summary>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.QueuePool`1.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.QueuePool`1.Get(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.QueuePool`1.Get(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            获取一个有初始内容的<see cref="T:System.Collections.Generic.Queue`1"/>，如果池内没有则新建
+            </summary>
+            <param name="collection">初始的内容</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.QueuePool`1.Return(System.Collections.Generic.Queue{`0})">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.QueuePool`1.ToArrayReturn(System.Collections.Generic.Queue{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.Queue`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="queue">要返还的队列</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.QueuePool`1.ToArrayRelease(System.Collections.Generic.Queue{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.Queue`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="queue">要返还的队列</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.Sets.HashSetPool`1">
+            <summary>
+            <see cref="T:System.Collections.Generic.HashSet`1"/>对象池
+            </summary>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.Sets.HashSetPool`1.Get(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            获取一个有初始内容的<see cref="T:System.Collections.Generic.HashSet`1"/>，如果池内没有则新建
+            </summary>
+            <param name="collection">初始的内容</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.Sets.HashSetPool`1.Return(System.Collections.Generic.HashSet{`0})">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.Sets.HashSetPool`1.ToArrayReturn(System.Collections.Generic.HashSet{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.HashSet`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="hashSet">要返还的哈希列表</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.Sets.HashSetPool`1.ToArrayRelease(System.Collections.Generic.HashSet{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.HashSet`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="hashSet">要返还的栈</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.Sets.SortedSetPool`1">
+            <summary>
+            <see cref="T:System.Collections.Generic.SortedSet`1"/>对象池
+            </summary>
+            <typeparam name="TObject">元素类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.Sets.SortedSetPool`1.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.Sets.SortedSetPool`1.Get(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            获取一个有初始内容的<see cref="T:System.Collections.Generic.SortedSet`1"/>，如果池内没有则新建
+            </summary>
+            <param name="collection">初始的内容</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.Sets.SortedSetPool`1.Return(System.Collections.Generic.SortedSet{`0})">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.Sets.SortedSetPool`1.ToArrayReturn(System.Collections.Generic.SortedSet{`0})">
+            <summary>
+            将 <see cref="T:System.Collections.Generic.SortedSet`1"/> 转化为数组，同时返回至对象池
+            </summary>
+            <param name="sorted">要返还的集合</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.Sets.SortedSetPool`1.ToArrayRelease(System.Collections.Generic.SortedSet{`0})">
+            <summary>
+            将 <see cref="T:System.Collections.Generic.SortedSet`1"/> 转化为数组，同时返回至对象池
+            </summary>
+            <param name="sorted">要返还的集合</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.StackPool`1">
+            <summary>
+            <see cref="T:System.Collections.Generic.Stack`1"/>对象池
+            </summary>
+            <typeparam name="TObject">对象的类型</typeparam>
+        </member>
+        <member name="M:PoolingLib.Pools.StackPool`1.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.StackPool`1.Get(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.StackPool`1.Get(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            获取一个有初始内容的<see cref="T:System.Collections.Generic.Queue`1"/>，如果池内没有则新建
+            </summary>
+            <param name="collection">初始的内容</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.StackPool`1.Return(System.Collections.Generic.Stack{`0})">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.StackPool`1.ToArrayReturn(System.Collections.Generic.Stack{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.Stack`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="stack">要返还的栈</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.StackPool`1.ToArrayRelease(System.Collections.Generic.Stack{`0})">
+            <summary>
+            将<see cref="T:System.Collections.Generic.Stack`1"/>转化为数组，同时返回至对象池
+            </summary>
+            <param name="stack">要返还的栈</param>
+            <returns>对象数组</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:PoolingLib.Pools.StringBuilderPool">
+            <summary>
+            <see cref="T:System.Text.StringBuilder"/>对象池
+            </summary>
+        </member>
+        <member name="M:PoolingLib.Pools.StringBuilderPool.Get">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.StringBuilderPool.Get(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:PoolingLib.Pools.StringBuilderPool.Get(System.String)">
+            <summary>
+            获取一个有初始字符串内容的<see cref="T:System.Text.StringBuilder"/>，如果池内没有则新建
+            </summary>
+            <param name="value">初始的内容</param>
+            <returns>返回的对象</returns>
+        </member>
+        <member name="M:PoolingLib.Pools.StringBuilderPool.Return(System.Text.StringBuilder)">
+            <inheritdoc/>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.StringBuilderPool.ToStringReturn(System.Text.StringBuilder)">
+            <summary>
+            将<see cref="T:System.Text.StringBuilder"/>组合后转化为文本，同时返回至对象池
+            </summary>
+            <param name="sb">要返还的<see cref="T:System.Text.StringBuilder"/></param>
+            <returns><see cref="T:System.Text.StringBuilder"/>转化后的字符串</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:PoolingLib.Pools.StringBuilderPool.ToStringRelease(System.Text.StringBuilder)">
+            <summary>
+            将<see cref="T:System.Text.StringBuilder"/>组合后转化为文本，同时返回至对象池
+            </summary>
+            <param name="sb">要返还的<see cref="T:System.Text.StringBuilder"/></param>
+            <returns><see cref="T:System.Text.StringBuilder"/>转化后的字符串</returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+    </members>
+</doc>

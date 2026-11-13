@@ -1,0 +1,89 @@
+<Project>
+  <!-- ===== 中央包管理（CPM）=====
+       启用后：各 .csproj 的 PackageReference 不得再写 Version，版本统一在本文件登记。
+       本文件是共享资源，修改须走 docs/git-workflow-policy.md §4「共享文件管理」流程（集成者唯一写者）。 -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- 传递依赖不自动钉版本，避免把间接依赖也钉死 -->
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+    <!-- 安全阀：遗留项目（如 LabAPI 插件）可临时用 VersionOverride 覆盖，新代码一律用中央版本 -->
+    <EnablePackageVersionOverride>true</EnablePackageVersionOverride>
+  </PropertyGroup>
+  <!-- ===== 测试栈（全仓统一）=====
+       版本核对日期：2026-09-24（dotnet package search）
+       升级流程：改本文件 → Release 构建 + dotnet test → PR 注明升级理由与破坏性变更 -->
+  <ItemGroup Label="测试">
+    <PackageVersion Include="ExMod.Exiled" Version="9.14.2" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+    <!-- FluentAssertions 7.x 为 Apache-2.0；8.x 起商业授权，商业项目勿升 -->
+    <PackageVersion Include="FluentAssertions" Version="7.2.2" />
+  </ItemGroup>
+  <!-- ===== 新增包登记区 =====
+       新增 NuGet 依赖时：在此加一行 <PackageVersion>，再在 .csproj 写无 Version 的 PackageReference。
+       <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+  -->
+  <ItemGroup Label="应用依赖">
+    <!-- 中央版本取「无 VersionOverride 项目」的原始版本；带 VersionOverride 的偏移见各 .csproj 注释 -->
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="MoonSharp" Version="2.0.0" />
+    <PackageVersion Include="NSec.Cryptography" Version="24.4.0" />
+    <PackageVersion Include="PoolingLib" Version="1.0.3" />
+    <PackageVersion Include="WatsonWebsocket" Version="4.1.8" />
+    <!-- YamlDotNet：LabApi.Helpers / SteveFramework 用 VersionOverride="11.0.1" -->
+    <PackageVersion Include="YamlDotNet" Version="17.0.1" />
+    <PackageVersion Include="Serilog" Version="4.3.1" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageVersion Include="LiteDB" Version="5.0.21" />
+    <PackageVersion Include="MengXinSheQu.Library" Version="1.0.1" />
+    <PackageVersion Include="Northwood.LabAPI" Version="1.1.7" />
+    <PackageVersion Include="Lib.Harmony" Version="2.4.2" />
+    <!-- Npgsql：NekoBot.Site19Plugin 用 VersionOverride="8.0.9"；Site19.DataTranslator 用 VersionOverride="10.0.3"；
+         reveng/projects/sitewebapi（task-212 PG 化）用 VersionOverride="10.0.3" -->
+    <PackageVersion Include="Npgsql" Version="6.0.13" />
+    <!-- Npgsql.EntityFrameworkCore.PostgreSQL：Site19.DataTranslator 用 VersionOverride="10.0.3"；
+         reveng/projects/sitewebapi（task-212）用 VersionOverride="10.0.3" -->
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+    <PackageVersion Include="System.Net.Http" Version="4.3.4" />
+    <PackageVersion Include="System.Memory" Version="4.6.3" />
+    <PackageVersion Include="NVorbis" Version="0.10.5" />
+    <PackageVersion Include="System.IO.Compression" Version="4.3.0" />
+    <PackageVersion Include="System.IO.Compression.ZipFile" Version="4.3.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+    <!-- Microsoft.EntityFrameworkCore.Design：EF 工具链沿用 8.0.28（中央值不动）；
+         reveng/projects/sitewebapi（task-212）运行时用 VersionOverride="10.0.12" -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.28" />
+    <PackageVersion Include="Costura.Fody" Version="6.2.0" />
+    <PackageVersion Include="Dapper" Version="2.1.79" />
+    <PackageVersion Include="NAudio.Core" Version="2.3.0" />
+    <!-- ===== 逆向还原子工程 / harness（2026-10-04 task-212 入库登记）=====
+         reveng/projects/{sitewebapi,webcommand} 与 tools/behavior-harness/* 的目标框架是
+         net5.0 / net48 / netstandard2.1，必须与「被还原的那套部署」口径一致，故此处登记的是
+         原部署版本而非最新版：
+           - Microsoft.Data.Sqlite 5.0.9：**WebCommand(IIS) 与 harness 仍用**；
+             reveng/projects/sitewebapi 已于 task-212 改为 Npgsql+EFCore（不再引用此项）；
+           - Microsoft.NETFramework.ReferenceAssemblies 1.0.3：net48 参考程序集（本机未装
+             4.8 Targeting Pack 时兜底）；
+           - Newtonsoft.Json 中央值为 13.0.4（src/ 侧在用）；**WebCommand 还原工程**用
+             VersionOverride="13.0.1" 锁回原部署版本（两者 AssemblyVersion 同为 13.0.0.0，
+             但 JSON 序列化细节以原文为准）；sitewebapi 已随 task-212 改为 13.0.4。 -->
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="5.0.9" />
+    <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
+  </ItemGroup>
+  <!-- ===== 运行时补丁 / 访问改造（插件项目按需启用）=====
+       版本核对日期：2026-09-24（dotnet package search）
+       使用约束见 docs/dotnet-coding-standard.md §9.8 -->
+  <ItemGroup Label="补丁与公开化">
+    <PackageVersion Include="HarmonyX" Version="2.16.1" />
+    <PackageVersion Include="Krafs.Publicizer" Version="2.3.2" />
+  </ItemGroup>
+</Project>

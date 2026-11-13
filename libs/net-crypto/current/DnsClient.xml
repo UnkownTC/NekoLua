@@ -1,0 +1,638 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DnsClient</name>
+    </assembly>
+    <members>
+        <member name="T:DnsClient.Data.DnsQuery">
+            <summary>
+            DNS Query
+            </summary>
+        </member>
+        <member name="M:DnsClient.Data.DnsQuery.#ctor(System.String,DnsClient.Enums.QType,System.Boolean)">
+            <summary>
+            Constructor of a DNS query
+            </summary>
+            <param name="name">Domain to query</param>
+            <param name="type">DNS record QType to obtain</param>
+            <param name="acceptTruncated">If set to true, the DNS client will accept truncated responses and won't retry the query using TCP</param>
+        </member>
+        <member name="M:DnsClient.Data.DnsQuery.#ctor(System.String,DnsClient.Enums.QType[],System.Boolean)">
+            <summary>
+            Constructor of a DNS query.
+            WARNING: Most of the DNS servers DOES NOT support querying multiple QTypes at once and will only respond to the first type.
+            </summary>
+            <param name="name">Domain to query</param>
+            <param name="type">Array of DNS record QTypes to obtain</param>
+            <param name="acceptTruncated">If set to true, the DNS client will accept truncated responses and won't retry the query using TCP</param>
+        </member>
+        <member name="T:DnsClient.Data.DnsResponse">
+            <summary>
+            Response to a DNS Query
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.DnsResponse.ErrorCode">
+            <summary>
+            Error code returned by the DNS server
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.DnsResponse.Truncated">
+            <summary>
+            Indicates whether the response was too long and was truncated by the DNS server
+            If this equals to true, it means that not all DNS records are present in this response.
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.DnsResponse.TCPUsed">
+            <summary>
+            Indicates whether TCP protocol was used to perform this query
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.DnsResponse.Records">
+            <summary>
+            Records returned by the DNS server
+            </summary>
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord">
+            <summary>
+            A class responsible for parsing and representing DNS records
+            </summary>
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.DNSRecord">
+            <summary>
+            A class representing any type of DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.DNSRecord.TTL">
+            <summary>
+            DNS record TTL value
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.DNSRecord.Type">
+            <summary>
+            DNS record type
+            </summary>
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.UnknownRecord">
+            <summary>
+            Unknown type of DNS record
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.UnknownRecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.UnknownRecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.IPAddressRecord">
+            <summary>
+            Class representing either A or AAAA DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.IPAddressRecord.Address">
+            <summary>
+            IP address pointed by the record
+            </summary>
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.IPAddressRecord.#ctor(System.UInt32,System.Net.IPAddress)">
+            <summary>
+            Class constructor
+            </summary>
+            <param name="ttl">TTL value of the record</param>
+            <param name="address">IP address pointed by the record</param>
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.ARecord">
+            <summary>
+            A DNS record
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.ARecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.ARecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.AAAARecord">
+            <summary>
+            AAAA DNS record
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.AAAARecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.AAAARecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.CNAMERecord">
+            <summary>
+            CNAME DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.CNAMERecord.Alias">
+            <summary>
+            Domain pointed by the record
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.CNAMERecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.CNAMERecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.SOARecord">
+            <summary>
+            SOA DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SOARecord.PrimaryNameServer">
+            <summary>
+            Primary Name Server
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SOARecord.ResponsibleAuthorityMailbox">
+            <summary>
+            Responsible Authority Mailbox
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SOARecord.SerialNumber">
+            <summary>
+            Serial Number
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SOARecord.RefreshInterval">
+            <summary>
+            Refresh Interval
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SOARecord.RetryInterval">
+            <summary>
+            Retry Interval
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SOARecord.ExpireLimit">
+            <summary>
+            Expire Limit
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SOARecord.MinimumTTL">
+            <summary>
+            Minimum TTL
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.SOARecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.SOARecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.NSRecord">
+            <summary>
+            NS DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.NSRecord.NameServer">
+            <summary>
+            Name Server address pointed by the record
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.NSRecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.NSRecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.PTRRecord">
+            <summary>
+            PTR DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.PTRRecord.DomainName">
+            <summary>
+            Domain Name pointed by the record
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.PTRRecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.PTRRecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.MXRecord">
+            <summary>
+            MX DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.MXRecord.MailExchange">
+            <summary>
+            Mail Exchange server address pointed by the record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.MXRecord.Preference">
+            <summary>
+            Mail Exchange server preference value
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.MXRecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.MXRecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.TXTRecord">
+            <summary>
+            TXT DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.TXTRecord.Text">
+            <summary>
+            Text of the DNS record
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.TXTRecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.TXTRecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.SRVRecord">
+            <summary>
+            SRV DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SRVRecord.Priority">
+            <summary>
+            DNS record priority
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SRVRecord.Weight">
+            <summary>
+            DNS record weight
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SRVRecord.Port">
+            <summary>
+            Port of the service
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.SRVRecord.Target">
+            <summary>
+            Address of the service
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.SRVRecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.SRVRecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.CAARecord">
+            <summary>
+            CAA DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.CAARecord.Flags">
+            <summary>
+            DNS record flags
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.CAARecord.Tag">
+            <summary>
+            DNS record tag
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.CAARecord.Value">
+            <summary>
+            DNS record value
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.CAARecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.CAARecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.DSRecord">
+            <summary>
+            DS DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.DSRecord.KeyId">
+            <summary>
+            KeyId
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.DSRecord.Algorithm">
+            <summary>
+            Algorithm
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.DSRecord.DigestType">
+            <summary>
+            Type of the digest
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.DSRecord.Digest">
+            <summary>
+            Digest
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.DSRecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.DSRecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.DNSKEYRecord">
+            <summary>
+            DNSKEY DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.DNSKEYRecord.Flags">
+            <summary>
+            DNS record flags
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.DNSKEYRecord.Protocol">
+            <summary>
+            Protocol
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.DNSKEYRecord.Algorithm">
+            <summary>
+            Algorithm
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.DNSKEYRecord.PublicKey">
+            <summary>
+            Public Key
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.DNSKEYRecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.DNSKEYRecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Data.Records.DnsRecord.URIRecord">
+            <summary>
+            URI DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.URIRecord.Priority">
+            <summary>
+            Priority of the DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.URIRecord.Weight">
+            <summary>
+            Weight of the DNS record
+            </summary>
+        </member>
+        <member name="F:DnsClient.Data.Records.DnsRecord.URIRecord.Target">
+            <summary>
+            Text of the DNS record
+            </summary>
+        </member>
+        <member name="P:DnsClient.Data.Records.DnsRecord.URIRecord.Type">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Data.Records.DnsRecord.URIRecord.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.DnsClient">
+            <summary>
+            Client of the DNS protocol
+            </summary>
+        </member>
+        <member name="F:DnsClient.DnsClient.Options">
+            <summary>
+            Options of the DNS client
+            </summary>
+        </member>
+        <member name="M:DnsClient.DnsClient.#ctor(System.Net.EndPoint,System.Nullable{DnsClient.DnsClientOptions})">
+            <summary>
+            Constructor of the DNS Client
+            </summary>
+            <param name="endPoint">Endpoint of the DNS server</param>
+            <param name="options">Options of the DNS client</param>
+        </member>
+        <member name="M:DnsClient.DnsClient.#ctor(System.Net.IPAddress,System.UInt16,System.Nullable{DnsClient.DnsClientOptions})">
+            <summary>
+            Constructor of the DNS Client
+            </summary>
+            <param name="address">IP address of the DNS server</param>
+            <param name="port">Port number of the DNS server</param>
+            <param name="options">Options of the DNS client</param>
+        </member>
+        <member name="M:DnsClient.DnsClient.#ctor(System.String,System.UInt16,System.Nullable{DnsClient.DnsClientOptions})">
+            <summary>
+            Constructor of the DNS Client
+            </summary>
+            <param name="address">IP address of the DNS server</param>
+            <param name="port">Port number of the DNS server</param>
+            <param name="options">Options of the DNS client</param>
+        </member>
+        <member name="M:DnsClient.DnsClient.Query(System.String,DnsClient.Enums.QType,System.Boolean)">
+            <summary>
+            Performs a DNS query
+            </summary>
+            <param name="domain">Domain to query</param>
+            <param name="qType">DNS record type to obtain</param>
+            <returns>Result of the DNS query</returns>
+            <exception cref="T:System.Exception">Exception thrown when DNS transaction couldn't be created.</exception>
+            <param name="acceptTruncated">If set to true, the DNS client will accept truncated responses and won't retry the query using TCP</param>
+        </member>
+        <member name="M:DnsClient.DnsClient.Query(DnsClient.Data.DnsQuery)">
+            <summary>
+            Performs a DNS query
+            </summary>
+            <param name="query">DNS query to perform</param>
+            <returns>Result of the DNS query</returns>
+            <exception cref="T:System.Exception">Exception thrown when DNS transaction couldn't be created.</exception>
+        </member>
+        <member name="M:DnsClient.DnsClient.QueryReverseDNS(System.String)">
+            <summary>
+            Queries a PTR DNS record of an IP address
+            </summary>
+            <param name="address">IP address to query</param>
+            <returns>Result of the DNS query</returns>
+        </member>
+        <member name="M:DnsClient.DnsClient.QueryReverseDNS(System.Net.IPAddress)">
+            <summary>
+            Queries a PTR DNS record of an IP address
+            </summary>
+            <param name="address">IP address to query</param>
+            <returns>Result of the DNS query</returns>
+        </member>
+        <member name="M:DnsClient.DnsClient.Dispose">
+            <summary>
+            Stops and disposes the DNS client
+            </summary>
+        </member>
+        <member name="M:DnsClient.DnsClient.Finalize">
+            <summary>
+            Stops and disposes the DNS client
+            </summary>
+        </member>
+        <member name="T:DnsClient.DnsClientOptions">
+            <summary>
+            <see cref="T:DnsClient.DnsClient"/> options
+            </summary>
+        </member>
+        <member name="P:DnsClient.DnsClientOptions.MaxAttempts">
+            <summary>
+            Maximum amount of attempts of performing a DNS query
+            </summary>
+            <exception cref="T:System.ArgumentException">Value is not greater than 0</exception>
+        </member>
+        <member name="P:DnsClient.DnsClientOptions.TimeoutInnerDelay">
+            <summary>
+            Controls how often the client checks for replies to each query (delay time in milliseconds)
+            </summary>
+            <exception cref="T:System.ArgumentException"></exception>
+        </member>
+        <member name="F:DnsClient.DnsClientOptions.Timeout">
+            <summary>
+            DNS query timeout (in milliseconds)
+            </summary>
+        </member>
+        <member name="F:DnsClient.DnsClientOptions.ErrorLogging">
+            <summary>
+            Errors handler
+            </summary>
+        </member>
+        <member name="F:DnsClient.DnsClientOptions.UseTCPForTruncated">
+            <summary>
+            Indicates whether queries with truncated response should be retried using TCP instead of UDP
+            </summary>
+        </member>
+        <member name="F:DnsClient.DnsClientOptions.TCPEndpointOverride">
+            <summary>
+            Allows to set a different endpoint for TCP connections.
+            Ignored if <see cref="F:DnsClient.DnsClientOptions.UseTCPForTruncated"/> is set to <value>FALSE</value>
+            </summary>
+        </member>
+        <member name="M:DnsClient.DnsClientOptions.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="T:DnsClient.Enums.DnsErrorCode">
+            <summary>
+            Error codes of the query
+            </summary>
+        </member>
+        <member name="F:DnsClient.Enums.DnsErrorCode.NoError">
+            <summary>
+            No error returned
+            </summary>
+        </member>
+        <member name="F:DnsClient.Enums.DnsErrorCode.FormatError">
+            <summary>
+            The DNS server was unable to interpret the query
+            </summary>
+        </member>
+        <member name="F:DnsClient.Enums.DnsErrorCode.ServerFailure">
+            <summary>
+            The DNS server was unable to process this query due to a problem with the DNS server
+            </summary>
+        </member>
+        <member name="F:DnsClient.Enums.DnsErrorCode.NameError">
+            <summary>
+            Meaningful only for responses from an authoritative DNS server, this code signifies that the domain name referenced in the query does ot exist
+            </summary>
+        </member>
+        <member name="F:DnsClient.Enums.DnsErrorCode.NotImplemented">
+            <summary>
+            The DNS server does not support the requested kind of query
+            </summary>
+        </member>
+        <member name="F:DnsClient.Enums.DnsErrorCode.Refused">
+            <summary>
+            The DNS server refuses to perform the specified operation for policy reasons
+            </summary>
+        </member>
+        <member name="F:DnsClient.Enums.DnsErrorCode.NoResponseFromServer">
+            <summary>
+            The DNS server did not respond to the query
+            </summary>
+        </member>
+        <member name="F:DnsClient.Enums.DnsErrorCode.CantParseResponse">
+            <summary>
+            Response from the DNS server couldn't be parsed
+            </summary>
+        </member>
+        <member name="T:DnsClient.Enums.QType">
+            <summary>
+            QType of the DNS query or record
+            </summary>
+        </member>
+        <member name="T:DnsClient.Logging.IErrorLogging">
+            <summary>
+            Interface used for logging internal errors of the DNS client
+            </summary>
+        </member>
+        <member name="M:DnsClient.Logging.IErrorLogging.LogError(System.String)">
+            <summary>
+            Called when an error (that is NOT an exception) needs to be logged
+            </summary>
+            <param name="message">Error content to log</param>
+        </member>
+        <member name="M:DnsClient.Logging.IErrorLogging.LogException(System.String,System.Exception)">
+            <summary>
+            Called when an error (that is an exception) needs to be logged
+            </summary>
+            <param name="message">Error content to log</param>
+            <param name="e">Exception to log</param>
+        </member>
+        <member name="T:DnsClient.Logging.StdoutLogger">
+            <summary>
+            Logs all errors to stdout (standard output)
+            </summary>
+        </member>
+        <member name="M:DnsClient.Logging.StdoutLogger.LogError(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:DnsClient.Logging.StdoutLogger.LogException(System.String,System.Exception)">
+            <inheritdoc />
+        </member>
+        <member name="T:DnsClient.Misc.Misc">
+            <summary>
+            Class containing helper methods
+            </summary>
+        </member>
+        <member name="M:DnsClient.Misc.Misc.TryGetPtrAddress(System.String,System.String@)">
+            <summary>
+            Attempts to return domain to query in order to query PTR record of an IP address
+            </summary>
+            <param name="address">IP address to query</param>
+            <param name="ptrAddress">A domain to query</param>
+            <returns>Indicates whether the operation was successful</returns>
+        </member>
+        <member name="M:DnsClient.Misc.Misc.GetPtrAddress(System.String)">
+            <summary>
+            Returns domain to query in order to query PTR record of an IP address
+            </summary>
+            <param name="address">IP address to query</param>
+            <returns>A domain to query</returns>
+            <exception cref="T:System.Exception">Can't parse provided IP address</exception>
+            <exception cref="T:System.NotSupportedException">AddressFamily not supported</exception>
+        </member>
+        <member name="M:DnsClient.Misc.Misc.GetPtrAddress(System.Net.IPAddress)">
+            <summary>
+            Returns domain to query in order to query PTR record of an IP address
+            </summary>
+            <param name="address">IP address to query</param>
+            <returns>A domain to query</returns>
+            <exception cref="T:System.Exception">Can't parse provided IP address</exception>
+            <exception cref="T:System.NotSupportedException">AddressFamily not supported</exception>
+        </member>
+        <member name="M:DnsClient.Misc.Misc.TryGetPtrAddress(System.Net.IPAddress,System.String@)">
+            <summary>
+            Attempts to return domain to query in order to query PTR record of an IP address
+            </summary>
+            <param name="address">IP address to query</param>
+            <param name="ptrAddress">A domain to query</param>
+            <returns>Indicates whether the operation was successful</returns>
+        </member>
+    </members>
+</doc>

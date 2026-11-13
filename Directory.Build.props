@@ -1,0 +1,100 @@
+<Project>
+
+  <!-- 全仓统一编译属性。
+       注意：TargetFramework 默认由本文件按"项目名约定"分派（net481 / net10.0 / netstandard2.0），
+       项目 .csproj 可显式声明 <TargetFramework> 覆盖；其余核心属性项目级不得覆盖。
+       C# 语言版本固定 latest（用户要求"尽量使用最新 C# 语言版本"）。 -->
+  <PropertyGroup>
+    <!-- 统一依赖根目录：libs/<分类>/<版本>/ 只读二进制布局（游戏/Unity/LabAPI/Harmony 等）。
+         SDK 风格工程通过 $(LibsRoot) 引用这些程序集；旧式（非 SDK）工程可自行内联覆盖。
+         路径以仓库根为基准，确保所有工程（不论嵌套深度）都解析到同一 libs/。 -->
+    <LibsRoot>$(MSBuildThisFileDirectory)libs\</LibsRoot>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>9</WarningLevel>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <CodeAnalysisTreatWarningsAsErrors>false</CodeAnalysisTreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <Deterministic>true</Deterministic>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- ===== 目标框架默认值（新建项目约定，2026-09-24 新增）=====
+       仅当项目 .csproj 未显式声明 TargetFramework / TargetFrameworks 时生效；
+       既有项目或需多目标框架可在 .csproj 自行声明 <TargetFramework> 覆盖本默认（此时条件不满足，默认不生效）。
+       约定（用户要求）：
+         - 插件项目（LabAPI 等）              → .NET Framework 4.8.1（net481）
+         - 普通项目（应用 / 类库 / 测试）      → .NET 10（net10.0）
+         - 插件与其他项目共享的依赖（契约/接口）→ .NET Standard 2.0（netstandard2.0）
+       自动分派依据（MSBuild 在 props 求值阶段即可见"项目名"，但见不到 .csproj 内的自定义属性，
+       故用项目名约定而非 <ProjectKind>）：
+         - 项目名含 "Plugin"                              → net481
+         - 项目名含 "Shared" / "Contracts" / "Abstractions" → netstandard2.0
+         - 其余                                          → net10.0
+       若项目名未体现类型，请在 .csproj 显式写 <TargetFramework> 覆盖（插件/共享项目建议从模板创建并显式声明）。 -->
+  <PropertyGroup Condition="'$(TargetFramework)' == '' and '$(TargetFrameworks)' == ''">
+    <TargetFramework Condition="$(MSBuildProjectName.Contains('Plugin'))">net481</TargetFramework>
+    <TargetFramework Condition="$(MSBuildProjectName.Contains('Shared')) or $(MSBuildProjectName.Contains('Contracts')) or $(MSBuildProjectName.Contains('Abstractions'))">netstandard2.0</TargetFramework>
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <!-- ===== 统一输出布局 =====
+       所有项目的编译中间目录与输出目录统一收进 artifacts/，便于集中管理与清理。
+       最终布局：
+         artifacts/obj/<项目>/                       中间产物（obj）
+         artifacts/build/<项目>/<Configuration>/<TFM>/   编译输出（build）
+         artifacts/publish/<项目>/                   发布输出（publish）
+       单个项目可退出：在 .csproj 里设 <UseWorkspaceArtifactsLayout>false</UseWorkspaceArtifactsLayout>
+       （插件类项目若其部署流程强依赖 bin/ 默认路径，可用该开关回退，但须在 DEPLOY.md 中说明）。 -->
+  <PropertyGroup>
+    <UseWorkspaceArtifactsLayout Condition="'$(UseWorkspaceArtifactsLayout)' == ''">true</UseWorkspaceArtifactsLayout>
+    <WorkspaceArtifactsRoot>$(MSBuildThisFileDirectory)artifacts\</WorkspaceArtifactsRoot>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(UseWorkspaceArtifactsLayout)' == 'true'">
+    <BaseIntermediateOutputPath>$(WorkspaceArtifactsRoot)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(WorkspaceArtifactsRoot)build\$(MSBuildProjectName)\</BaseOutputPath>
+    <PublishDir>$(WorkspaceArtifactsRoot)publish\$(MSBuildProjectName)\</PublishDir>
+  </PropertyGroup>
+
+  <!-- CI 环境下警告升级为错误；本地保持宽容以便多 Agent 并行推进 -->
+  <PropertyGroup Condition="'$(CI)' == 'true' or '$(ContinuousIntegrationBuild)' == 'true'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- ===== 编译预设：Release | x64 =====
+       统一声明受支持的平台，使 Release|x64 成为全仓默认可用预设（项目级可覆盖 Platforms）。
+       注意：仅在显式以 Release|x64 构建时才把 PlatformTarget 设为 x64；
+             默认（AnyCPU）构建行为不变，避免影响插件等需 AnyCPU 的项目。 -->
+  <PropertyGroup>
+    <Platforms Condition="'$(Platforms)' == ''">AnyCPU;x64</Platforms>
+    <Configurations Condition="'$(Configurations)' == ''">Debug;Release</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+
+  <!-- 测试项目（约定：项目名以 .Tests 结尾） -->
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CA1707;CA2007;CA1861</NoWarn>
+  </PropertyGroup>
+
+  <!-- 统一版本信息，避免各项目各写一份 -->
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <Authors>AI-Workspace</Authors>
+    <NeutralLanguage>zh-CN</NeutralLanguage>
+  </PropertyGroup>
+
+</Project>
