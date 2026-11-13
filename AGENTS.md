@@ -32,6 +32,7 @@ NekoLua 是 SCP: Secret Laboratory 服务端 Lua 脚本插件（LabAPI + MoonSha
 | `libs/` | 只读依赖（游戏与 LabAPI 程序集） | 需要新引用时 |
 | `tools/vsbuild.py` | 构建入口（net481 必需） | 每次构建 |
 | `docs/` | 扩展契约与桥接方案（`EXTENSIONS.md` / `ASTRA-EXTENSION.md`） | 加扩展 / 写文档时 |
+| `tests/lua/` | Lua 测试套件（6 个测试插件 + `install.ps1`） | 回归 / 实机验证时 |
 | `artifacts/` | 构建产物与中间文件（不提交） | 排查失败时 |
 
 ---

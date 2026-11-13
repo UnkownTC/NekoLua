@@ -54,3 +54,8 @@ python tools/vsbuild.py src/NekoLua.Astra/NekoLua.Astra.csproj -p:Configuration=
 
 详见 [docs/EXTENSIONS.md](docs/EXTENSIONS.md)；Astra 桥接方案见
 [docs/ASTRA-EXTENSION.md](docs/ASTRA-EXTENSION.md)。
+
+## 测试
+
+[tests/lua/](tests/lua/README.md) 是一组可部署到 `NekoLua/mods/` 的测试插件（运行时冒烟、
+Astra 内容/负向/调度、核心 API 抽查、热重载回收），附带 `install.ps1` 与执行说明。
