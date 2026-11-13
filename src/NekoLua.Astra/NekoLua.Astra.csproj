@@ -16,9 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Astra 3.2.0 只读依赖：Entry 化 + 加权波次（IWeightedWave）/ 支援池 / 原版波次标记 -->
+    <!-- Astra 3.3.1 只读依赖：Entry 化 + 加权波次 + 角色移除清理修复 -->
     <Reference Include="Astra.Framework">
-      <HintPath>$(LibsRoot)astra\3.2.0\Astra.Framework.dll</HintPath>
+      <HintPath>$(LibsRoot)astra\3.3.1\Astra.Framework.dll</HintPath>
       <Private>false</Private>
     </Reference>
 

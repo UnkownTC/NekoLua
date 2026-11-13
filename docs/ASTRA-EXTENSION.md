@@ -1,7 +1,7 @@
 # NekoLua × AstraFramework 扩展方案（v1 已实现）
 
-> 状态：**v1.2 已实现**（核心 `0a00d81`，桥接 `31c72ec`；已适配 Astra 3.2.0 加权波次）。2026-11-14。
-> 基线：NekoLua `1.0.0`（本仓库）/ AstraFramework `3.2.0`。
+> 状态：**v1.3 已实现**（核心 `0a00d81`，桥接 `31c72ec`；已适配 Astra 3.3.1）。2026-11-14。
+> 基线：NekoLua `1.0.0`（本仓库）/ AstraFramework `3.3.1`。
 > 一句话：Lua 通过 `astra.*` 声明 `CustomTeam` / `CustomRole` / `CustomWave` 并操作它们；桥接是独立 `NekoLua.Astra.dll`，放 `NekoLua/extensions/`，核心不引用 Astra。
 
 ## 实现状态（2026-11-14）
@@ -14,6 +14,7 @@
 | 热重载（同 Id 换定义、延迟一帧注销）、按 mod 回收、主线程校验、守卫标签 | 已完成 |
 | Astra 3.0.1 适配：`Items` 改 `ItemEntry`（支持自定义物品 Id）、`Teams` 改 `TeamRef`（原版/自定义混编）、`Table` 改 `RoleEntry`、生成器实现 `ICustomWaveRoleSpawnerV2` | 已完成 |
 | Astra 3.2.0 适配：波次可声明 `weight` / `min_players` / `max_players`（`IWeightedWave`），可直接进 `WaveScheduler` / `SupportWavePool` | 已完成 |
+| Astra 3.3.1 修复：`CustomRole.RemoveRole` 守卫写反（`if (Check(player)) return;`），所有移除路径都不触发 `OnRemoved` 与属性回收；桥接最低版本提升到 3.3.1 | 已完成（Astra `41ebe5b`） |
 | `astra.ability`（v2）、`astra.effect.define`（v2）、`astra.item`（v3）、`astra.patch`（不做） | 未实现 |
 | 实机冒烟（游戏内加载示例 mod） | 待服务端验证 |
 
@@ -23,7 +24,7 @@
 2. Astra 不可用时**不是没有 `astra` 表**，而是 `astra.available = false`、调用抛明确错误（扩展装载器仍然实例化了表提供者）。
 3. `astra.role.define` 的定义回调 v1 只支持 `on_added` / `on_removed`；其它事件用 `eventhook.bind("astraplayer", "Shooting", ...)` 或 LabAPI 事件。
 4. 波次刷新数量：`wave_count` 为统一数量；需要按波次不同数量时用 `wave_counts = { ["waveId"] = n }`。
-5. **Astra 3.0 是 BREAKING**：桥接已跟进 Entry 化；Lua 侧语义不变，只是 `items` 现在也能写自定义物品 Id、`teams` / 波次 `table` 也能写原版阵营 / 原版角色名。低于 3.2.0 的 Astra 会直接 `astra.available=false`。
+5. **Astra 3.0 是 BREAKING**：桥接已跟进 Entry 化；Lua 侧语义不变，只是 `items` 现在也能写自定义物品 Id、`teams` / 波次 `table` 也能写原版阵营 / 原版角色名。低于 3.3.1 的 Astra 会直接 `astra.available=false`。
 6. **Astra 3.1/3.2 是增量能力**：`astra.wave.define` 增加了 `weight` / `min_players` / `max_players`，Lua 定义的波次实现了 `IWeightedWave`，可交给 `WaveScheduler.Load/Advance` 或 `SupportWavePool.Register/Pick` 使用；桥接本身不替脚本调度波次。
 
 ---
@@ -280,7 +281,7 @@ eventhook.bind("astraplayer", "Shooting", "no_friendly_fire", function(ev) ... e
 
 | 项 | 值 |
 |---|---|
-| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/3.2.0/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
+| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/3.3.1/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
 | 目标框架 | `net481`，`PlatformTarget=x64` |
 | 构建 | 复用 `tools/vsbuild.py` 形态，独立 csproj |
 | 部署 | 只放 `NekoLua/extensions/`；**不要**放 `plugins/`（见 A1/A2） |
@@ -418,7 +419,7 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 | 场景 | 行为 |
 |---|---|
 | Astra 程序集不存在 | `OnLoad` Error，返回不注册；Lua 侧没有 `astra` 表 |
-| Astra < 3.2.0 | 同上，日志写明「需要 AstraFramework >= 3.2.0」 |
+| Astra < 3.3.1 | 同上，日志写明「需要 AstraFramework >= 3.3.1」 |
 | 定义字段非法 | 抛 `ScriptRuntimeException`，错误带字段名 |
 | Id 重复（不同 mod） | 第二个 define 抛异常，提示占用者 |
 | 同 mod 同 Id 重定义 | 替换定义，返回成功 |
@@ -434,7 +435,7 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 
 ```lua
 astra.available          -- boolean，桥接可用
-astra.version            -- "3.2.0"（Astra 版本）
+astra.version            -- "3.3.1"（Astra 版本）
 astra.api_version        -- 1
 astra.flush()            -- 手动提交（调试用）
 ```

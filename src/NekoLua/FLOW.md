@@ -2,8 +2,8 @@
 
 - **项目路径**：`src/NekoLua/`
 - **文档版本**：`v6`
-- **最后同步**：2026-11-14 @ Astra 3.2.0 适配（加权波次 + 支援池 / 原版波次标记）
-- **同步原因**：Astra 3.1/3.2 增量能力接入——`astra.wave.define` 支持 `weight` / `min_players` / `max_players`（`LuaCustomWave` 实现 `IWeightedWave`，可直接用于 `WaveScheduler` / `SupportWavePool`）；依赖升级到 `libs/astra/3.2.0/`；波次执行仍走 `CustomWaveApi.Spawn`
+- **最后同步**：2026-11-14 @ Astra 3.3.1 适配（角色移除清理修复）
+- **同步原因**：桥接依赖升级到 `libs/astra/3.3.1/`；Astra 3.3.1 修复 `CustomRole.RemoveRole` 守卫写反（`if (Check(player)) return;` → `if (!Check(player)) return;`），修复前所有移除路径都不会触发 `OnRemoved` 与 CustomInfo/Scale/Gravity/MaxHealth 回收；桥接最低版本提升到 3.3.1
 - **负责人**：WorkBuddy（deepseek-v4.1-flash）
 
 ---
@@ -192,7 +192,7 @@ flowchart TD
 | Newtonsoft.Json 13.0.4 | 引用（NuGet） | `LuaJson`、`LuaObjectProxy` | JSON 表不可用 | — |
 | NVorbis 0.10.5 | 引用（NuGet） | `Proxies/SubLibs/LuaNvorbisProxy` | `nvorbis` 表不可用 | `Config.EnableNvorbis = false` 可关闭 |
 | `System.Net.Http` 4.3.4 | 引用（NuGet） | `Proxies/Net/LuaHttpProxy` | `http` 表不可用 | — |
-| AstraFramework（可选，仅 `NekoLua.Astra`） | 引用（编译期，`libs/astra/3.2.0/`） | `src/NekoLua.Astra/*` | 桥接 DLL 不加载 / `astra.available=false` | 核心不引用；扩展目录扫描失败只记日志 |
+| AstraFramework（可选，仅 `NekoLua.Astra`） | 引用（编译期，`libs/astra/3.3.1/`） | `src/NekoLua.Astra/*` | 桥接 DLL 不加载 / `astra.available=false` | 核心不引用；扩展目录扫描失败只记日志 |
 | 文件系统（`SecretLab/NekoLua`） | 双向（读写） | `LuaPaths`、`LuaEmbeddedExtractor`、`file`/`directory` 表 | 目录不可写则插件加载失败；运行期读写失败由脚本处理 | `LuaPathGuard` 双层（`BlockedPaths` 硬拒绝 + `AllowedPaths` 放行），默认只能访问自身 mod 目录；`ExtractEmbeddedLua=false` 跳过解压 |
 | 网络（HTTP/TCP/UDP/WS/FTP） | 出向 | `Proxies/Net/*` | 连接失败由脚本处理 | `EnableNetwork` / `EnableFtp` 总开关；`MaxConnectionsPerMod` 限流；`BlockPrivateNetworkTargets` 阻断私网/环回/云元数据 |
 | 操作系统进程与原生调用 | 出向（默认关） | `Proxies/Interop/*`、`LuaProcessProxy` | 主机被脚本控制 | `EnableProcess=false`、`EnableWin32=false` 默认关闭；`Win32FunctionBlacklist`（进程创建/内存读写/模块加载）硬拒绝、`Win32AllowPointerArgs=false`；`ProcessWhitelist` 支持全路径强模式 |
@@ -210,6 +210,7 @@ flowchart TD
 | 2026-11-14 | `0a00d81`（核心）+ `31c72ec`（桥接） | 新增扩展装载点：`extensions/*.dll` 扫描、`IRegisterLua` 注入、`ILuaExtension` 生命周期、`LuaCleanupRegistry` 回收链、`LuaEventHook.RegisterEventClass`；新增可选 `NekoLua.Astra` 桥接（Astra 2.2.1 实例注册） | §1 / §2 / §4 |
 | 2026-11-14 | Astra 3.0.1 适配 | 桥接改用 Entry 模型：`ItemEntry` 初始物品（支持自定义物品 Id）、`TeamRef` 波次阵营（原版/自定义混编）、`RoleEntry` 刷新表；生成器实现 `ICustomWaveRoleSpawnerV2`；最低 Astra 版本 3.0.1 | §4 |
 | 2026-11-14 | Astra 3.2.0 适配 | `astra.wave.define` 增加 `weight` / `min_players` / `max_players`（`LuaCustomWave` 实现 `IWeightedWave`，可被 `WaveScheduler` / `SupportWavePool` 使用）；最低 Astra 版本 3.2.0 | §4 |
+| 2026-11-14 | Astra 3.3.1 适配 | 依赖升级 `libs/astra/3.3.1/`；修复 `CustomRole.RemoveRole` 守卫，`OnRemoved` 与角色属性回收恢复；桥接最低版本 3.3.1 | §4 |
 
 ---
 
