@@ -95,8 +95,8 @@ kit.command("lua_core", "NekoLua 核心 API 抽查", function()
     s:falsy("try.attempt 失败返回", ok)
     s:typeIs("try.attempt err", err, "table")
 
-    -- pool
-    local p = pool.new(2, function() return { n = 0 } end)
+    -- pool（点号调用；capacity 是预填充数量，用 0 测 factory + release）
+    local p = pool.new(0, function() return { n = 0 } end)
     local obj = p.get()
     p.release(obj)
     s:eq("pool.size", p.size(), 1)
