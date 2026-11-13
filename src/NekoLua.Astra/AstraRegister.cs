@@ -325,7 +325,9 @@ public sealed class AstraRegister : IRegisterLua
                     ? (int)args[0].Number
                     : Player.Count;
 
-                var wave = scheduler.Support.Pick(playerCount);
+                // 必须走 WaveScheduler.PickSupportWave：它会把抽中的波次写进 Current；
+                // 直接调 Support.Pick 不会更新调度器的当前波次。
+                var wave = scheduler.PickSupportWave(playerCount);
                 return wave is null ? DynValue.Nil : content.Cache.Wrap(wave);
             });
 

@@ -139,25 +139,12 @@ function M.new(name)
     return suite
 end
 
--- 注册一个控制台 + RA 双端命令；handler 抛异常时返回失败给命令发送方。
+-- 注册一个控制台 + RA 双端命令。
+-- 不在命令包装里使用 try.attempt：MoonSharp 2.0.0 在「C# 回调内再嵌套调用 Lua
+-- 回调」之后回写 local 会触发 AssignLocal NRE；这里保持零 local，异常交给核心捕获。
 function M.command(name, description, handler)
     local function invoke(args, sender)
-        -- pcall 不在硬沙箱里，用 try.attempt 包裹（它不带参数，所以用闭包转发）。
-        local okRun, result = try.attempt(function()
-            return handler(args, sender)
-        end)
-
-        if okRun then
-            if result == nil then
-                return true, "OK"
-            end
-
-            return true, tostring(result)
-        end
-
-        local message = errorText(result)
-        log.error(string.format("[%s] 测试命令异常: %s", name, message))
-        return false, message
+        return true, tostring(handler(args, sender) or "OK")
     end
 
     local ok = command.register({

@@ -105,8 +105,11 @@ kit.command("lua_astra", "Astra 桥接内容与运行时测试", function()
         s:skip("hint.show/clear", "没有在线玩家")
         s:skip("effect.apply/remove", "没有在线玩家")
     else
+        log.info("[10_astra_content] 玩家段: give 开始")
         s:truthy("role.give", astra.role.give(ply, "kit_role"))
+        log.info("[10_astra_content] 玩家段: give 完成, get 开始")
         s:eq("role.get", astra.role.get(ply).id, "kit_role")
+        log.info("[10_astra_content] 玩家段: get 完成, on_added 检查")
         s:truthy("on_added 回调", storage.get("kit_role_added") == true)
 
         s:run("hint.show/clear", function()
@@ -119,7 +122,9 @@ kit.command("lua_astra", "Astra 桥接内容与运行时测试", function()
             astra.effect.remove(ply, { { effect = "Bleeding", intensity = 1, duration = 1 } })
         end)
 
+        log.info("[10_astra_content] 玩家段: remove 开始")
         astra.role.remove(ply)
+        log.info("[10_astra_content] 玩家段: remove 完成")
         s:falsy("role.remove 后 get", astra.role.get(ply) ~= nil)
         s:truthy("on_removed 回调", storage.get("kit_role_removed") == true)
     end
