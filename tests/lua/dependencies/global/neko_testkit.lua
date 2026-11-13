@@ -123,12 +123,16 @@ function M.new(name)
     end
 
     function suite:run(label, fn)
-        -- 尾调用：本帧不声明 local，避开 MoonSharp 嵌套回调后的 AssignLocal 崩溃。
-        return classifyRun(self, label, try.attempt(fn))
+        -- 不要写成 return classify(self, ..., try.attempt(fn))：
+        -- MoonSharp 2.0.0 在「尾调用 + 多返回值展开」的组合下会把调用目标解析错
+        -- （表现为 attempt to call a string value）。先落到局部变量再转发最稳。
+        local ok, err = try.attempt(fn)
+        classifyRun(self, label, ok, err)
     end
 
     function suite:throws(label, fn, needle)
-        return classifyThrows(self, label, needle, try.attempt(fn))
+        local ok, err = try.attempt(fn)
+        classifyThrows(self, label, needle, ok, err)
     end
 
     function suite:finish()
