@@ -1,7 +1,7 @@
 # NekoLua × AstraFramework 扩展方案（v1 已实现）
 
-> 状态：**v1 已实现**（核心 `0a00d81`，桥接 `31c72ec`）。2026-11-14。
-> 基线：NekoLua `1.0.0`（本仓库）/ AstraFramework `2.2.1`。
+> 状态：**v1.1 已实现**（核心 `0a00d81`，桥接 `31c72ec`；适配 Astra 3.0.1）。2026-11-14。
+> 基线：NekoLua `1.0.0`（本仓库）/ AstraFramework `3.0.1`。
 > 一句话：Lua 通过 `astra.*` 声明 `CustomTeam` / `CustomRole` / `CustomWave` 并操作它们；桥接是独立 `NekoLua.Astra.dll`，放 `NekoLua/extensions/`，核心不引用 Astra。
 
 ## 实现状态（2026-11-14）
@@ -12,6 +12,7 @@
 | NekoLua 扩展装载点（`extensions/`、`IRegisterLua` 注入、`ILuaExtension`、`LuaCleanupRegistry`、`RegisterEventClass`） | 已完成 |
 | 桥接 v1：`astra.team/role/wave` + `astra.hint/audio/countdown/effect` | 已完成 |
 | 热重载（同 Id 换定义、延迟一帧注销）、按 mod 回收、主线程校验、守卫标签 | 已完成 |
+| Astra 3.0.1 适配：`Items` 改 `ItemEntry`（支持自定义物品 Id）、`Teams` 改 `TeamRef`（原版/自定义混编）、`Table` 改 `RoleEntry`、生成器实现 `ICustomWaveRoleSpawnerV2` | 已完成 |
 | `astra.ability`（v2）、`astra.effect.define`（v2）、`astra.item`（v3）、`astra.patch`（不做） | 未实现 |
 | 实机冒烟（游戏内加载示例 mod） | 待服务端验证 |
 
@@ -21,6 +22,7 @@
 2. Astra 不可用时**不是没有 `astra` 表**，而是 `astra.available = false`、调用抛明确错误（扩展装载器仍然实例化了表提供者）。
 3. `astra.role.define` 的定义回调 v1 只支持 `on_added` / `on_removed`；其它事件用 `eventhook.bind("astraplayer", "Shooting", ...)` 或 LabAPI 事件。
 4. 波次刷新数量：`wave_count` 为统一数量；需要按波次不同数量时用 `wave_counts = { ["waveId"] = n }`。
+5. **Astra 3.0 是 BREAKING**：桥接已跟进 Entry 化；Lua 侧语义不变，只是 `items` 现在也能写自定义物品 Id、`teams` / 波次 `table` 也能写原版阵营 / 原版角色名。低于 3.0.1 的 Astra 会直接 `astra.available=false`。
 
 ---
 
@@ -126,7 +128,7 @@ LabAPI OnServerPluginsEnabled
 
 ---
 
-## 4. AstraFramework 上游改动（已落地 2.2.0 / 2.2.1，MINOR）
+## 4. AstraFramework 上游改动（已落地 2.2.x / 3.0.x）
 
 > 只加 API，不改现有签名；存量 C# 模板行为不变。
 
@@ -276,7 +278,7 @@ eventhook.bind("astraplayer", "Shooting", "no_friendly_fire", function(ev) ... e
 
 | 项 | 值 |
 |---|---|
-| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/2.2.1/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
+| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/3.0.1/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
 | 目标框架 | `net481`，`PlatformTarget=x64` |
 | 构建 | 复用 `tools/vsbuild.py` 形态，独立 csproj |
 | 部署 | 只放 `NekoLua/extensions/`；**不要**放 `plugins/`（见 A1/A2） |
@@ -414,7 +416,7 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 | 场景 | 行为 |
 |---|---|
 | Astra 程序集不存在 | `OnLoad` Error，返回不注册；Lua 侧没有 `astra` 表 |
-| Astra < 2.2.1 | 同上，日志写明「需要 AstraFramework >= 2.2.1」 |
+| Astra < 3.0.1 | 同上，日志写明「需要 AstraFramework >= 3.0.1」 |
 | 定义字段非法 | 抛 `ScriptRuntimeException`，错误带字段名 |
 | Id 重复（不同 mod） | 第二个 define 抛异常，提示占用者 |
 | 同 mod 同 Id 重定义 | 替换定义，返回成功 |
@@ -430,7 +432,7 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 
 ```lua
 astra.available          -- boolean，桥接可用
-astra.version            -- "2.2.1"（Astra 版本）
+astra.version            -- "3.0.1"（Astra 版本）
 astra.api_version        -- 1
 astra.flush()            -- 手动提交（调试用）
 ```
@@ -458,7 +460,7 @@ astra.role.define{
   role_type = "ChaosRifleman",      -- RoleTypeId
   team = "chaos_elite",             -- 自定义阵营 Id（可空，空则按 role_type 推导）
   max_health = 200,
-  items = { "Shotgun", "Medkit" },  -- ItemType
+  items = { "Shotgun", "Medkit" },  -- 原版 ItemType，或自定义物品 Id（3.0 起可混编）
   clear_inventory = true,
   show_custom_info = true,
   scale = {1,1,1}, gravity = {0,-9.8,0},
@@ -466,8 +468,6 @@ astra.role.define{
   waves = { "chaos_wave" }, wave_count = 2,   -- 2 / -1=填充剩余
   on_added   = function(ply) ply.health = 200 end,
   on_removed = function(ply) end,
-  on_changed_role = function(ev) end,
-  on_hurt = function(ev) end,
 }
 
 astra.role.give(player.get("Steve"), "chaos_elite_shotgunner")  -- 返回 bool
@@ -482,7 +482,8 @@ astra.role.find("chaos_elite_shotgunner")
 ```lua
 astra.wave.define{
   id = "chaos_wave", name = "混沌波次",
-  teams = { "chaos_elite" },
+  teams = { "chaos_elite" },          -- 自定义阵营 Id 或原版 Team 名，可混编
+  -- table = { ["chaos_elite_shotgunner"] = 2, ["ChaosRifleman"] = 2 },  -- 覆盖角色侧刷新型
   announcement = "混沌精英入场",
   spawn_protect = true, spawn_protect_duration = 8,
   modify_threat = true, threat = 1.2,
@@ -492,7 +493,7 @@ astra.wave.spawn("chaos_wave", player.list())  -- 返回实际生成的玩家表
 astra.wave.find("chaos_wave")
 ```
 
-> 限制（来自 A5）：刷新数量只能写在角色上，且一个角色在所有波次里数量相同。若需要 per-wave 数量，需先做 §4.4 的 Astra 改动。
+> 3.0 起 `table` 的键可以是自定义角色 Id，也可以是原版 `RoleTypeId` 名；不定 `table` 时由角色侧 `waves` + `wave_count` / `wave_counts` 聚合。
 
 ### 7.5 其它 API 分级
 
@@ -501,8 +502,8 @@ astra.wave.find("chaos_wave")
 | v1 | `astra.hint.show(ply, text, position, duration)` / `astra.hint.clear(ply)` | 包 `HintApi`，position 用 `HintPosition` 名 |
 | v1 | `astra.audio.play(ply_or_nil, file, volume)` / `astra.audio.stop(...)` | 包 `AudioApi`，全局/单人两态 |
 | v1 | `astra.countdown.start(delay, cb, tick_cb, repeat_cb)` / `astra.countdown.cancel(id)` | 包 `CountdownApi`；`repeat` 回调返回 true 表示继续 |
-| v1 | `astra.effect.apply(ply, { {type="vanilla", effect="Bleeding", intensity=1, duration=5} })` / `remove` | 只做 `EffectEntry.Vanilla`，自定义效果需 C# |
-| v1 | `astra.token.player(ply)` / `round()` / `framework()` | 返回只读句柄，供脚本轮询/取消（不直接暴露 `CancellationToken`） |
+| v1 | `astra.effect.apply(ply, { {effect="Bleeding", intensity=1, duration=5} })` / `remove` | 只做 `EffectEntry.Vanilla`，自定义效果需 C# |
+| 未实现 | `astra.token.*` | 取消令牌语义与 Lua 生命周期不匹配，暂不暴露（v2 候选） |
 | v2 | `astra.ability.define{...}` | 适配 `StandardAbility`：键位/冷却/条件/触发回调；需要按键槽位与客户端设置下发 |
 | v2 | `astra.effect.define{...}` | 适配 `CustomEffect`（需要状态机回调） |
 | v3 | `astra.item.define{...}` | 适配 `CustomItem` 家族（射击/换弹/拾取全钩子） |

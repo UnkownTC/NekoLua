@@ -19,7 +19,7 @@ tools/vsbuild.py      构建入口（net481 必需）
 dotnet restore src/NekoLua/NekoLua.csproj
 python tools/vsbuild.py src/NekoLua/NekoLua.csproj -p:Configuration=Release -p:Platform=x64
 
-# 可选桥接（需要 AstraFramework >= 2.2，DLL 已放在 libs/astra/2.2.1/）
+# 可选桥接（需要 AstraFramework >= 3.0.1，DLL 已放在 libs/astra/3.0.1/）
 dotnet restore src/NekoLua.Astra/NekoLua.Astra.csproj
 python tools/vsbuild.py src/NekoLua.Astra/NekoLua.Astra.csproj -p:Configuration=Release -p:Platform=x64
 ```
@@ -37,7 +37,7 @@ python tools/vsbuild.py src/NekoLua.Astra/NekoLua.Astra.csproj -p:Configuration=
 | Assembly-CSharp(-firstpass) / CommandSystem.Core / Mirror / NorthwoodLib / Pooling | `libs/scpsl-server/current/` |
 | LabApi | `libs/PublicizedAssemblies/LabApi-Publicized.dll` |
 | UnityEngine.* / Unity.TextMeshPro | `libs/unity/current/` |
-| Astra.Framework（仅 `NekoLua.Astra` 工程） | `libs/astra/2.2.1/Astra.Framework.dll` |
+| Astra.Framework（仅 `NekoLua.Astra` 工程） | `libs/astra/3.0.1/Astra.Framework.dll` |
 
 **核心工程不引用任何其它插件工程**：Astra 只被可选的 `NekoLua.Astra` 引用，且该程序集由
 `NekoLua/extensions/` 目录在运行时扫描装载，核心程序集不需要 Astra 即可编译发布。

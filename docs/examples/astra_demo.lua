@@ -27,7 +27,7 @@ astra.role.define {
     role_type = "ChaosRifleman",
     team = "chaos_elite",
     max_health = 200,
-    items = { "Shotgun", "Medkit" },
+    items = { "Shotgun", "Medkit" },   -- 原版 ItemType；也可写自定义物品 Id（Astra 3.0 起）
     clear_inventory = true,
     show_custom_info = true,
     waves = { "chaos_wave" },
