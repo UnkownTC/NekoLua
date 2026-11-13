@@ -72,7 +72,12 @@ internal static class LuaSpec
         if (value.Type != DataType.String)
             throw Error(ctx, $"{key} 必须是字符串枚举名");
 
-        if (!Enum.TryParse(value.String, true, out TEnum parsed) || !Enum.IsDefined(typeof(TEnum), parsed))
+        if (!Enum.TryParse(value.String, true, out TEnum parsed))
+            throw Error(ctx, $"{key} = '{value.String}' 不是合法取值");
+
+        // [Flags] 枚举允许组合值（如 "A, B"），IsDefined 对组合值恒为 false，不能用来校验。
+        var isFlags = typeof(TEnum).IsDefined(typeof(FlagsAttribute), inherit: false);
+        if (!isFlags && !Enum.IsDefined(typeof(TEnum), parsed))
             throw Error(ctx, $"{key} = '{value.String}' 不是合法取值");
 
         return parsed;
