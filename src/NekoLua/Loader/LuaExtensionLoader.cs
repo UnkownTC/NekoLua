@@ -43,7 +43,10 @@ public static class LuaExtensionLoader
             Assembly asm;
             try
             {
-                asm = Assembly.LoadFrom(file.FullName);
+                // 用字节加载而不是 Assembly.LoadFrom：
+                // LoadFrom 会把扩展 DLL 文件句柄锁到进程退出，运行期无法替换/删除；
+                // Load(byte[]) 只把映像读进内存，文件可随时覆盖（但仍需重启才能换掉已加载的代码）。
+                asm = Assembly.Load(File.ReadAllBytes(file.FullName));
             }
             catch (Exception ex)
             {

@@ -110,4 +110,6 @@ eventhook.bind("mypack", "Shooting", "id", function(ev) end)
 
 - 扩展编译期绑定 NekoLua 的公开 API；核心删改公开签名属破坏性变更（AGENTS §6 按 MAJOR 处理）。
 - net481 没有 `AssemblyLoadContext`，DLL 一旦加载**无法卸载**：扩展更新需要重启服务端；`OnUnload` 必须把静态状态清干净，`OnLoad` 必须幂等。
+- 扩展程序集**不会被文件锁定**（NekoLua 用 `Assembly.Load(byte[])` 装载，而非 `LoadFrom`）：服务器运行期间可以直接覆盖 `NekoLua/extensions/*.dll`，替换后重启（或重新启用 NekoLua 插件）生效；但已加载的旧代码在进程退出前仍存活，不能指望热替换。
+- 因为用字节装载，扩展**不能依赖 `extensions/` 目录里的其它 DLL**（没有目录探测）；依赖应放在 `plugins/` 由 LabAPI 加载，或合并进同一个扩展 DLL。
 - 扩展程序集不会进入 Astra 之类的自动注册扫描（它不是 LabAPI 插件）；但放在 `plugins/` 下会被 LabAPI 当成插件加载，部署位置请固定在 `NekoLua/extensions/`。
