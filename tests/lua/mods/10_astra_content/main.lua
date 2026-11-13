@@ -129,8 +129,8 @@ kit.command("lua_astra", "Astra 桥接内容与运行时测试", function()
 
         trace("before-hint")
         s:run("hint.show/clear", function()
-            astra.hint.show(ply, "NekoLua 测试提示", "CenterTop", 2)
-            astra.hint.clear(ply, "kit_hint")
+            -- show 返回实际 messageId；clear 必须用同一个 id（HintServiceMeow 对空/不存在 id 会抛 NRE）
+            astra.hint.clear(ply, astra.hint.show(ply, "NekoLua 测试提示", "CenterTop", 2))
         end)
         trace("after-hint")
 

@@ -220,7 +220,7 @@ internal static class AstraBridge
         {
             e.Team = definition;
             e.Adapter ??= new LuaCustomTeam(definition);
-        });
+        }, "astra.team.define");
 
         return entry.State == ContentState.Registered;
     }
@@ -232,7 +232,7 @@ internal static class AstraBridge
         {
             e.Wave = definition;
             e.Adapter ??= new LuaCustomWave(definition);
-        });
+        }, "astra.wave.define");
 
         return entry.State == ContentState.Registered;
     }
@@ -244,7 +244,7 @@ internal static class AstraBridge
         {
             e.Role = definition;
             e.Adapter ??= new LuaCustomRole(definition);
-        });
+        }, "astra.role.define");
 
         return entry.State == ContentState.Registered;
     }
@@ -366,6 +366,28 @@ internal static class AstraBridge
         LuaModInstance mod,
         ContentKind kind,
         string id,
+        Action<ContentEntry> apply,
+        string api)
+    {
+        try
+        {
+            return UpsertCore(mod, kind, id, apply);
+        }
+        catch (ScriptRuntimeException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // 第三方/Astra 抛出的 .NET 异常不能跨进 MoonSharp（会破坏其调用栈），统一转脚本异常。
+            throw new ScriptRuntimeException($"{api}: {ex.Message}");
+        }
+    }
+
+    private static ContentEntry UpsertCore(
+        LuaModInstance mod,
+        ContentKind kind,
+        string id,
         Action<ContentEntry> apply)
     {
         var content = GetMod(mod);
@@ -409,13 +431,23 @@ internal static class AstraBridge
 
     private static bool TryRegister(ContentEntry entry)
     {
-        var ok = entry.Kind switch
+        bool ok;
+
+        try
         {
-            ContentKind.Team => entry.Adapter is LuaCustomTeam team && CustomTeamApi.Register(team),
-            ContentKind.Wave => entry.Adapter is LuaCustomWave wave && CustomWaveApi.Register(wave),
-            ContentKind.Role => entry.Adapter is LuaCustomRole role && CustomRoleApi.Register(role),
-            _ => false,
-        };
+            ok = entry.Kind switch
+            {
+                ContentKind.Team => entry.Adapter is LuaCustomTeam team && CustomTeamApi.Register(team),
+                ContentKind.Wave => entry.Adapter is LuaCustomWave wave && CustomWaveApi.Register(wave),
+                ContentKind.Role => entry.Adapter is LuaCustomRole role && CustomRoleApi.Register(role),
+                _ => false,
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[NekoLua.Astra] {entry.Kind} '{entry.Id}' 注册时抛出异常: {ex.Message}");
+            ok = false;
+        }
 
         if (ok)
         {

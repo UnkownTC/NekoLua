@@ -127,9 +127,12 @@ public sealed class AstraRegister : IRegisterLua
             EnsureMainThread(api);
             Guard("astra.role", api);
 
-            var player = LuaArgs.ResolvePlayer(args, 0, api);
-            var id = RequireString(args, 1, api);
-            return DynValue.NewBoolean(CustomRoleApi.AddRole(player, id) is not null);
+            return Guarded(api, () =>
+            {
+                var player = LuaArgs.ResolvePlayer(args, 0, api);
+                var id = RequireString(args, 1, api);
+                return DynValue.NewBoolean(CustomRoleApi.AddRole(player, id) is not null);
+            });
         });
 
         t["remove"] = DynValue.NewCallback((_, args) =>
@@ -139,8 +142,11 @@ public sealed class AstraRegister : IRegisterLua
             EnsureMainThread(api);
             Guard("astra.role", api);
 
-            CustomRoleApi.RemoveRole(LuaArgs.ResolvePlayer(args, 0, api));
-            return DynValue.True;
+            return Guarded(api, () =>
+            {
+                CustomRoleApi.RemoveRole(LuaArgs.ResolvePlayer(args, 0, api));
+                return DynValue.True;
+            });
         });
 
         t["get"] = DynValue.NewCallback((_, args) =>
@@ -206,7 +212,16 @@ public sealed class AstraRegister : IRegisterLua
                 ?? throw new ScriptRuntimeException($"{api}: 找不到波次 '{id}'");
 
             var players = args.Count > 1 ? CollectPlayers(args[1], api) : Player.List;
-            var spawned = CustomWaveApi.Spawn(wave, players);
+
+            IReadOnlyList<Player> spawned;
+            try
+            {
+                spawned = CustomWaveApi.Spawn(wave, players);
+            }
+            catch (Exception ex)
+            {
+                throw new ScriptRuntimeException($"{api}: {ex.Message}");
+            }
 
             var result = new Table(script);
             var index = 1;
@@ -353,10 +368,23 @@ public sealed class AstraRegister : IRegisterLua
             var position = ParseEnum(args, 2, HintPosition.CenterTop);
             var duration = ParseNumber(args, 3, 3f);
             var fontSize = (int)ParseNumber(args, 4, 20f);
-            var messageId = args.Count > 5 && args[5].Type == DataType.String ? args[5].String : null;
 
-            HintApi.SendTo(player, text, duration, position, fontSize, messageId!);
-            return DynValue.Nil;
+            // HintServiceMeow 的 RemoveHint 依赖非空 messageId；Lua 未传时生成一个，
+            // 并把最终 id 返回给脚本，方便后续 prefix.clear 精确移除。
+            var messageId = args.Count > 5 && args[5].Type == DataType.String && !string.IsNullOrWhiteSpace(args[5].String)
+                ? args[5].String
+                : "astra:" + Guid.NewGuid().ToString("N");
+
+            try
+            {
+                HintApi.SendTo(player, text, duration, position, fontSize, messageId);
+            }
+            catch (Exception ex)
+            {
+                throw new ScriptRuntimeException($"{api}: {ex.Message}");
+            }
+
+            return DynValue.NewString(messageId);
         });
 
         t["clear"] = DynValue.NewCallback((_, args) =>
@@ -366,7 +394,18 @@ public sealed class AstraRegister : IRegisterLua
             EnsureMainThread(api);
             Guard("astra", api);
 
-            HintApi.RemoveHint(LuaArgs.ResolvePlayer(args, 0, api), RequireString(args, 1, api));
+            var player = LuaArgs.ResolvePlayer(args, 0, api);
+            var id = RequireString(args, 1, api);
+
+            try
+            {
+                HintApi.RemoveHint(player, id);
+            }
+            catch (Exception ex)
+            {
+                throw new ScriptRuntimeException($"{api}: {ex.Message}");
+            }
+
             return DynValue.Nil;
         });
 
@@ -398,9 +437,9 @@ public sealed class AstraRegister : IRegisterLua
                 ? (float)args[index + 1].Number
                 : 1f;
 
-            return DynValue.NewNumber(player is null
+            return Guarded(api, () => DynValue.NewNumber(player is null
                 ? AudioApi.PlayAudio(file, volume)
-                : AudioApi.PlayAudio(player, file, volume));
+                : AudioApi.PlayAudio(player, file, volume)));
         });
 
         t["stop"] = DynValue.NewCallback((_, args) =>
@@ -410,12 +449,15 @@ public sealed class AstraRegister : IRegisterLua
             EnsureMainThread(api);
             Guard("astra", api);
 
-            if (args.Count > 0 && !args[0].IsNil())
-                AudioApi.Stop(LuaArgs.ResolvePlayer(args, 0, api));
-            else
-                AudioApi.Stop();
+            return Guarded(api, () =>
+            {
+                if (args.Count > 0 && !args[0].IsNil())
+                    AudioApi.Stop(LuaArgs.ResolvePlayer(args, 0, api));
+                else
+                    AudioApi.Stop();
 
-            return DynValue.Nil;
+                return DynValue.Nil;
+            });
         });
 
         return t;
@@ -477,8 +519,11 @@ public sealed class AstraRegister : IRegisterLua
             EnsureMainThread(api);
             Guard("astra", api);
 
-            CustomEffectApi.Apply(LuaArgs.ResolvePlayer(args, 0, api), ParseEffects(args, 1, api));
-            return DynValue.Nil;
+            return Guarded(api, () =>
+            {
+                CustomEffectApi.Apply(LuaArgs.ResolvePlayer(args, 0, api), ParseEffects(args, 1, api));
+                return DynValue.Nil;
+            });
         });
 
         t["remove"] = DynValue.NewCallback((_, args) =>
@@ -488,8 +533,11 @@ public sealed class AstraRegister : IRegisterLua
             EnsureMainThread(api);
             Guard("astra", api);
 
-            CustomEffectApi.Remove(LuaArgs.ResolvePlayer(args, 0, api), ParseEffects(args, 1, api));
-            return DynValue.Nil;
+            return Guarded(api, () =>
+            {
+                CustomEffectApi.Remove(LuaArgs.ResolvePlayer(args, 0, api), ParseEffects(args, 1, api));
+                return DynValue.Nil;
+            });
         });
 
         return t;
@@ -604,6 +652,23 @@ public sealed class AstraRegister : IRegisterLua
         {
             Logger.Error($"astra 回调异常（{api}）: {ex.DecoratedMessage}");
             return DynValue.Nil;
+        }
+    }
+
+    private static DynValue Guarded(string api, Func<DynValue> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (ScriptRuntimeException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // 第三方库抛出的 .NET 异常不能跨进 MoonSharp（会破坏其执行栈），统一转脚本异常。
+            throw new ScriptRuntimeException($"{api}: {ex.Message}");
         }
     }
 

@@ -510,7 +510,7 @@ sched.reset()
 
 | 级别 | API | 说明 |
 |---|---|---|
-| v1 | `astra.hint.show(ply, text, position, duration)` / `astra.hint.clear(ply)` | 包 `HintApi`，position 用 `HintPosition` 名 |
+| v1 | `astra.hint.show(ply, text, position, duration, font_size?, id?)` → messageId / `astra.hint.clear(ply, id)` | 包 `HintApi`；未传 id 时桥接自动生成并返回，`clear` 必须用同一个 id（HintServiceMeow 对空/不存在 id 会抛 NRE） |
 | v1 | `astra.audio.play(ply_or_nil, file, volume)` / `astra.audio.stop(...)` | 包 `AudioApi`，全局/单人两态 |
 | v1 | `astra.countdown.start(delay, cb, tick_cb, repeat_cb)` / `astra.countdown.cancel(id)` | 包 `CountdownApi`；`repeat` 回调返回 true 表示继续 |
 | v1 | `astra.wave.scheduler()` → `load/advance/current/remaining/reset/support_register/support_pick` | 3.1+ 加权调度器与支援池；句柄按 mod 独立 |
