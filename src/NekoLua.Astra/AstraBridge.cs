@@ -70,8 +70,8 @@ internal static class AstraBridge
 {
     public const int ApiVersion = 1;
 
-    /// <summary>桥接要求的最低 Astra 版本。</summary>
-    public static readonly Version MinimumAstraVersion = new(2, 2, 0);
+    /// <summary>桥接要求的最低 Astra 版本（3.0 起 Entry 化：ItemEntry / RoleEntry / TeamRef / WaveSpawnEntry）。</summary>
+    public static readonly Version MinimumAstraVersion = new(3, 0, 1);
 
     private static readonly Dictionary<string, ContentEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, ModContent> _mods = new(StringComparer.OrdinalIgnoreCase);
@@ -550,7 +550,10 @@ internal sealed class AstraBootstrap : CustomEventsHandler
 }
 
 /// <summary>波次角色生成器：只处理 NekoLua.Astra 注册的角色，其余交给链上的其它生成器。</summary>
-internal sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
+/// <remarks>
+/// 实现 V2 接口以接收 <see cref="RoleEntry"/>：原版角色条目返回 false，由 Astra 的兜底（或链上其它生成器）处理。
+/// </remarks>
+internal sealed class LuaRoleSpawner : ICustomWaveRoleSpawner, ICustomWaveRoleSpawnerV2
 {
     public bool TrySpawn(string roleId, Player player)
     {
@@ -558,5 +561,18 @@ internal sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
             return false;
 
         return AstraBridge.SpawnRole(roleId, player);
+    }
+
+    public bool TrySpawn(RoleEntry role, Player player)
+    {
+        if (!role.IsCustom)
+            return false;
+
+        var id = role.CustomRole?.Id ?? role.CustomRoleId;
+
+        if (string.IsNullOrWhiteSpace(id) || !AstraBridge.OwnsRole(id))
+            return false;
+
+        return AstraBridge.SpawnRole(id, player);
     }
 }

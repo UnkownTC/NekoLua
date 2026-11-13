@@ -1,3 +1,4 @@
+using Astra.Items;
 using Astra.Roles;
 using Astra.Teams;
 using Astra.Waves;
@@ -111,7 +112,7 @@ internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider
         set { }
     }
 
-    public override ItemType[] Items
+    public override IReadOnlyList<ItemEntry> Items
     {
         get => Def.Items;
         set { }
@@ -177,18 +178,25 @@ internal sealed class LuaCustomWave : CustomWave
 
     public override string Name => Def.Name;
 
-    public override IReadOnlyList<CustomTeam> Teams
+    public override IReadOnlyList<TeamRef> Teams
     {
         get
         {
-            List<CustomTeam> teams = [];
+            List<TeamRef> teams = [];
 
             foreach (var teamId in Def.Teams)
             {
-                var team = CustomTeamApi.Find(teamId);
+                var custom = CustomTeamApi.Find(teamId);
 
-                if (team is not null)
-                    teams.Add(team);
+                if (custom is not null)
+                {
+                    teams.Add(TeamRef.FromCustom(custom));
+                    continue;
+                }
+
+                // 没找到自定义阵营时按原版 Team 枚举解析（允许自定义阵营与原版阵营混编）。
+                if (Enum.TryParse(teamId, true, out Team vanilla) && Enum.IsDefined(typeof(Team), vanilla))
+                    teams.Add(TeamRef.FromVanilla(vanilla));
             }
 
             return teams;
@@ -207,8 +215,35 @@ internal sealed class LuaCustomWave : CustomWave
 
     public override string? AnnouncementTranslation => Def.AnnouncementTranslation;
 
-    public override IReadOnlyDictionary<string, int> Table =>
-        Def.Table ?? base.Table;
+    public override IReadOnlyDictionary<RoleEntry, int> Table =>
+        Def.Table is null ? base.Table : ResolveTable();
+
+    private IReadOnlyDictionary<RoleEntry, int> ResolveTable()
+    {
+        Dictionary<RoleEntry, int> table = [];
+        var source = Def.Table!;
+
+        foreach (var pair in source)
+        {
+            // 键可以是自定义角色 Id 或原版 RoleTypeId 名；先按已注册自定义角色匹配，再退回原版角色。
+            if (CustomRoleApi.TryGetRoleTemplate(pair.Key, out _))
+            {
+                table[RoleEntry.Custom(pair.Key)] = pair.Value;
+                continue;
+            }
+
+            if (Enum.TryParse(pair.Key, true, out RoleTypeId vanilla) && Enum.IsDefined(typeof(RoleTypeId), vanilla))
+            {
+                table[RoleEntry.Vanilla(vanilla)] = pair.Value;
+                continue;
+            }
+
+            // 尚未注册的自定义角色 Id：先登记条目，Astra 在刷新时按 Id 解析。
+            table[RoleEntry.Custom(pair.Key)] = pair.Value;
+        }
+
+        return table;
+    }
 
     public override bool CheckAllowSpawn(Player player) =>
         AstraBridge.InvokePredicate(_id, Def.AllowSpawn, player);

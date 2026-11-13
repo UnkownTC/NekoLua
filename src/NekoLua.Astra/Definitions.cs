@@ -1,3 +1,4 @@
+using Astra.Items;
 using Astra.Teams;
 
 using MoonSharp.Interpreter;
@@ -29,7 +30,7 @@ internal sealed class RoleDefinition
     public RoleTypeId RoleType = RoleTypeId.None;
     public string TeamId = string.Empty;
     public float MaxHealth = 100f;
-    public ItemType[] Items = [];
+    public ItemEntry[] Items = [];
     public bool ClearInventory = true;
     public bool ShowCustomInfo;
     public Vector3? Scale;
@@ -173,17 +174,24 @@ internal static class DefinitionParser
         return result;
     }
 
-    private static ItemType[] ParseItems(Table t, string key, string ctx)
+    private static ItemEntry[] ParseItems(Table t, string key, string ctx)
     {
         var raw = LuaSpec.OptionalStringArray(t, key, ctx);
-        var result = new ItemType[raw.Length];
+        var result = new ItemEntry[raw.Length];
 
         for (var i = 0; i < raw.Length; i++)
         {
-            if (!Enum.TryParse(raw[i], true, out ItemType item) || !Enum.IsDefined(typeof(ItemType), item))
-                throw LuaSpec.Error(ctx, $"{key}[{i + 1}] = '{raw[i]}' 不是合法 ItemType");
+            // 先按原版 ItemType 解析；不是原版枚举时视为自定义物品 Id（运行时由 Astra 解析并发放）。
+            if (Enum.TryParse(raw[i], true, out ItemType item) && Enum.IsDefined(typeof(ItemType), item))
+            {
+                result[i] = ItemEntry.Vanilla(item);
+                continue;
+            }
 
-            result[i] = item;
+            if (string.IsNullOrWhiteSpace(raw[i]) || raw[i].Length > 64)
+                throw LuaSpec.Error(ctx, $"{key}[{i + 1}] 既不是合法 ItemType，也不是合法的自定义物品 Id");
+
+            result[i] = ItemEntry.Custom(raw[i]);
         }
 
         return result;

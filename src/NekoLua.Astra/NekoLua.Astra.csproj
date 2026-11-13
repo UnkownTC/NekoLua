@@ -16,9 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Astra 2.2.1 只读依赖：实例注册/注销与 spawner 链均在此版本引入 -->
+    <!-- Astra 3.0.1 只读依赖：Entry 化（ItemEntry / RoleEntry / TeamRef / WaveSpawnEntry）与 V2 生成器 -->
     <Reference Include="Astra.Framework">
-      <HintPath>$(LibsRoot)astra\2.2.1\Astra.Framework.dll</HintPath>
+      <HintPath>$(LibsRoot)astra\3.0.1\Astra.Framework.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
