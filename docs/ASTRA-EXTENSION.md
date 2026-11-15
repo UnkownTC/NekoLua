@@ -1,7 +1,7 @@
 # NekoLua × AstraFramework 扩展方案（v1 已实现）
 
-> 状态：**v1.3 已实现**（核心 `0a00d81`，桥接 `31c72ec`；已适配 Astra 3.3.1）。2026-11-14。
-> 基线：NekoLua `1.0.0`（本仓库）/ AstraFramework `3.3.1`。
+> 状态：**v1.3 已实现**（核心 `0a00d81`，桥接 `31c72ec`；已适配 Astra 4.0.0）。2026-11-16。
+> 基线：NekoLua `1.0.0`（本仓库）/ AstraFramework `4.0.0`。
 > 一句话：Lua 通过 `astra.*` 声明 `CustomTeam` / `CustomRole` / `CustomWave` 并操作它们；桥接是独立 `NekoLua.Astra.dll`，放 `NekoLua/extensions/`，核心不引用 Astra。
 > Lua 侧参考手册见 [API-ASTRA.md](API-ASTRA.md)；NekoLua 核心 API 见 [API.md](API.md)。
 
@@ -16,16 +16,17 @@
 | Astra 3.0.1 适配：`Items` 改 `ItemEntry`（支持自定义物品 Id）、`Teams` 改 `TeamRef`（原版/自定义混编）、`Table` 改 `RoleEntry`、生成器实现 `ICustomWaveRoleSpawnerV2` | 已完成 |
 | Astra 3.2.0 适配：波次可声明 `weight` / `min_players` / `max_players`（`IWeightedWave`），可直接进 `WaveScheduler` / `SupportWavePool` | 已完成 |
 | Astra 3.3.1 修复：`CustomRole.RemoveRole` 守卫写反（`if (Check(player)) return;`），所有移除路径都不触发 `OnRemoved` 与属性回收；桥接最低版本提升到 3.3.1 | 已完成（Astra `41ebe5b`） |
+| Astra 4.0.0 适配：编译依赖升级 `libs/astra/4.0.0/`；4.0 的 `ISpawnOnRoundStart` 为上游 BREAKING，桥接未实现该接口，team/role/wave 适配无需改动 | 已完成 |
 | `astra.ability`（v2）、`astra.effect.define`（v2）、`astra.item`（v3）、`astra.patch`（不做） | 未实现 |
 | 实机冒烟（游戏内加载示例 mod） | 待服务端验证 |
 
 与设计稿的差异：
 
-1. Astra 实际从 **2.2.1** 起步（设计稿写 2.2.0）：额外提供 `IWaveSpawnCountProvider`（按波次数量）与 `[DisableAutoRegister]` 内容豁免；当前基线已到 **3.3.1**（见状态表）。
+1. Astra 实际从 **2.2.1** 起步（设计稿写 2.2.0）：额外提供 `IWaveSpawnCountProvider`（按波次数量）与 `[DisableAutoRegister]` 内容豁免；当前基线已到 **4.0.0**（见状态表）。
 2. Astra 不可用时**不是没有 `astra` 表**，而是 `astra.available = false`、调用抛明确错误（扩展装载器仍然实例化了表提供者）。
 3. `astra.role.define` 的定义回调 v1 只支持 `on_added` / `on_removed`；其它事件用 `eventhook.bind("astraplayer", "Shooting", ...)` 或 LabAPI 事件。
 4. 波次刷新数量：`wave_count` 为统一数量；需要按波次不同数量时用 `wave_counts = { ["waveId"] = n }`。
-5. **Astra 3.0 是 BREAKING**：桥接已跟进 Entry 化；Lua 侧语义不变，只是 `items` 现在也能写自定义物品 Id、`teams` / 波次 `table` 也能写原版阵营 / 原版角色名。低于 3.3.1 的 Astra 会直接 `astra.available=false`。
+5. **Astra 3.0 是 BREAKING**：桥接已跟进 Entry 化；Lua 侧语义不变，只是 `items` 现在也能写自定义物品 Id、`teams` / 波次 `table` 也能写原版阵营 / 原版角色名。低于 4.0.0 的 Astra 会直接 `astra.available=false`。
 6. **Astra 3.1/3.2 是增量能力**：`astra.wave.define` 增加了 `weight` / `min_players` / `max_players`，Lua 定义的波次实现了 `IWeightedWave`，可交给 `WaveScheduler.Load/Advance` 或 `SupportWavePool.Register/Pick` 使用；桥接本身不替脚本调度波次。
 
 ---
@@ -282,7 +283,7 @@ eventhook.bind("astraplayer", "Shooting", "no_friendly_fire", function(ev) ... e
 
 | 项 | 值 |
 |---|---|
-| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/3.3.1/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
+| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/4.0.0/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
 | 目标框架 | `net481`，`PlatformTarget=x64` |
 | 构建 | 复用 `tools/vsbuild.py` 形态，独立 csproj |
 | 部署 | 只放 `NekoLua/extensions/`；**不要**放 `plugins/`（见 A1/A2） |
@@ -419,8 +420,8 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 
 | 场景 | 行为 |
 |---|---|
-| Astra 程序集不存在 | `OnLoad` Error，返回不注册；Lua 侧没有 `astra` 表 |
-| Astra < 3.3.1 | 同上，日志写明「需要 AstraFramework >= 3.3.1」 |
+| Astra 程序集不存在 | `astra` 表存在但 `available=false`；调用报「需要 AstraFramework >= 4.0.0」，并记录 `[NekoLua.Astra]` 日志 |
+| Astra < 4.0.0 | 同上，`available=false`；桥接不注册事件类与角色生成器 |
 | 定义字段非法 | 抛 `ScriptRuntimeException`，错误带字段名 |
 | Id 重复（不同 mod） | 第二个 define 抛异常，提示占用者 |
 | 同 mod 同 Id 重定义 | 替换定义，返回成功 |
@@ -438,7 +439,7 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 
 ```lua
 astra.available          -- boolean，桥接可用
-astra.version            -- "3.3.1"（Astra 版本）
+astra.version            -- "4.0.0"（Astra 版本）
 astra.api_version        -- 1
 astra.flush()            -- 手动提交（调试用）
 ```
@@ -575,8 +576,8 @@ end)
 
 | 条件 | 表现 |
 |---|---|
-| Astra 未安装 | NekoLua 正常启动；`astra` 表存在但 `available=false`，调用报“需要 AstraFramework >= 3.3.1” |
-| Astra < 3.3.1 | 同上；桥接不注册事件类与角色生成器，日志明确提示最低版本 |
+| Astra 未安装 | NekoLua 正常启动；`astra` 表存在但 `available=false`，调用报“需要 AstraFramework >= 4.0.0” |
+| Astra < 4.0.0 | 同上；桥接不注册事件类与角色生成器，日志明确提示最低版本 |
 | NekoLua 旧版（无扩展钩子） | 桥接无法被加载（文件不被扫描），无副作用 |
 | 定义冲突（跨 mod） | 后者 define 报错，前者不受影响 |
 | reload 期间 | 定义热替换，玩家角色保留；一帧后确认无重定义才注销 |
@@ -588,7 +589,7 @@ end)
 
 ## 10. 落地路线与验证
 
-> 状态：P0–P4 全部已完成，桥接基线为 Astra 3.3.1。
+> 状态：P0–P4 全部已完成，桥接基线为 Astra 4.0.0。
 
 | 阶段 | 内容 | 验证 |
 |---|---|---|
@@ -614,7 +615,7 @@ print(astra.role.get(p) ~= nil)
 
 **风险**
 
-1. **Astra 上游 API 变动**：桥接编译期绑定 Astra 3.3.1 签名（Entry 模型）；升级需同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与桥接代码，低于下限会直接 `astra.available=false`。
+1. **Astra 上游 API 变动**：桥接编译期绑定 Astra 4.0.0 签名（Entry 模型）；升级需同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与桥接代码，低于下限会直接 `astra.available=false`。
 2. **Initialize 早退**（A4）：只要有人绕过 Flush 提前注册，C# 模板会整体消失；桥接自身守住了时序，但挡不住第三方扩展抢跑。当前未做模板数启动自检，出现时表现为原版 C# 模板消失，需按 Flush 顺序排查。
 3. **注销与玩家实例**：`Unregister` 只清模板，玩家身上的实例要调用方自己摘；桥接已内置，但 C# 侧直接用新 API 的人容易忘。
 4. **程序集不可卸载**：NekoLua 用 `Assembly.Load(byte[])` 装载扩展，DLL 文件不再被锁、运行期可直接覆盖；但已加载的旧代码要重启（或重新启用 NekoLua 插件）才会换新。`OnUnload` 必须把静态状态清干净，`OnLoad` 必须幂等；扩展也不能依赖 `extensions/` 里的其它 DLL。
@@ -623,6 +624,6 @@ print(astra.role.get(p) ~= nil)
 
 **开放问题**
 
-1. **后续 Astra 版本的兼容上限**：桥接只校验最低版本（3.3.1），4.0 若再改 Entry / 注册模型需要重新适配；升级前关注 Astra 发布说明。
+1. **后续 Astra 版本的兼容上限**：桥接只校验最低版本（4.0.0）；4.0 的回合开始生成 API 尚未桥接，再改 Entry / 注册模型需要重新适配；升级前关注 Astra 发布说明。
 2. **per-wave 角色数量**：目前 `wave_count` 统一值 + `wave_counts` 覆盖；更细粒度取决于 Astra 上游 `IWaveSpawnCountProvider` 的演进（A5）。
 3. **v2 ability / v3 item**：v1 已明确不做；是否投入取决于玩法是否真的需要按键技能 / 自定义物品（各约 +500 行）。

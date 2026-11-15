@@ -1,6 +1,6 @@
 -- NekoLua.Astra 示例：自定义阵营 / 角色 / 波次
 -- 部署：SecretLab/NekoLua/mods/<端口>/astra_demo/main.lua
--- 前置：NekoLua/extensions/NekoLua.Astra.dll + AstraFramework >= 3.3.1
+-- 前置：NekoLua/extensions/NekoLua.Astra.dll + AstraFramework >= 4.0.0
 
 if astra == nil or not astra.available then
     print("[astra_demo] astra 不可用: " .. tostring(astra and astra.version))

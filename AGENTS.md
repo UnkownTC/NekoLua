@@ -84,7 +84,7 @@ NekoLua 是 SCP: Secret Laboratory 服务端 Lua 脚本插件（LabAPI + MoonSha
 dotnet restore src/NekoLua/NekoLua.csproj
 python tools/vsbuild.py src/NekoLua/NekoLua.csproj -p:Configuration=Release -p:Platform=x64
 
-# 可选桥接（需要 libs/astra/3.3.1/Astra.Framework.dll）
+# 可选桥接（需要 libs/astra/4.0.0/Astra.Framework.dll）
 dotnet restore src/NekoLua.Astra/NekoLua.Astra.csproj
 python tools/vsbuild.py src/NekoLua.Astra/NekoLua.Astra.csproj -p:Configuration=Release -p:Platform=x64
 ```

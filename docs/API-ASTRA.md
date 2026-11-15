@@ -1,6 +1,6 @@
 # NekoLua × AstraFramework 桥接 API
 
-> 适用版本：AstraFramework **>= 3.3.1**，NekoLua 核心以仓库当前 `main` 为准。
+> 适用版本：AstraFramework **>= 4.0.0**，NekoLua 核心以仓库当前 `main` 为准。
 > 桥接产物：`artifacts/build/NekoLua.Astra/x64/Release/net481/NekoLua.Astra.dll`，部署到 `SecretLab/NekoLua/extensions/`。
 > 相关文档：[NekoLua API 参考](API.md) · [桥接设计（时序与决策）](ASTRA-EXTENSION.md) · [扩展开发](EXTENSIONS.md)
 
@@ -14,7 +14,7 @@
 |---|---|
 | 运行环境 | 已加载 AstraFramework 插件（`Astra.Framework.dll` 由 Astra 自己发布） |
 | 桥接位置 | `SecretLab/NekoLua/extensions/NekoLua.Astra.dll`，**不要**放 `plugins/` |
-| 编译依赖 | `NekoLua.dll` + `Astra.Framework.dll`（`libs/astra/3.3.1/`）+ LabAPI / 游戏程序集 |
+| 编译依赖 | `NekoLua.dll` + `Astra.Framework.dll`（`libs/astra/4.0.0/`）+ LabAPI / 游戏程序集 |
 | 生效方式 | 覆盖 DLL 后重启服务端，或重新启用 NekoLua 插件 |
 
 桥接是普通类库，不是 LabAPI 插件：Astra 的 `AutoRegister` 会扫描所有插件程序集，若桥接被当成插件，适配器类型会被误注册成模板。装载走 NekoLua 的 `extensions/` 扩展点（`Assembly.Load(byte[])`），详见 [EXTENSIONS.md](EXTENSIONS.md)。
@@ -28,9 +28,9 @@ if not astra.available then
 end
 ```
 
-- `astra.available`：`Astra.Framework` 程序集版本是否 `>= 3.3.1`。
+- `astra.available`：`Astra.Framework` 程序集版本是否 `>= 4.0.0`。
 - `astra.version`：检测到的 Astra 版本字符串；读不到时为 `"unknown"`。
-- 不可用时 `astra` 表仍然存在（脚本可以安全探测），但所有方法调用都会抛“需要 AstraFramework >= 3.3.1”。
+- 不可用时 `astra` 表仍然存在（脚本可以安全探测），但所有方法调用都会抛“需要 AstraFramework >= 4.0.0”。
 - 不可用时桥接也**不会**注册 `astraplayer` 事件类与波次角色生成器。
 
 ### 1.3 装载时序
@@ -214,7 +214,7 @@ print(team.vanillaTeam)     -- 成员名大小写不敏感
 | `on_added` | `function` | `nil` | 角色添加回调 `function(ply)` |
 | `on_removed` | `function` | `nil` | 角色移除回调 `function(ply)` |
 
-`wave_count` 为 `0` 或小于 `-1` 会整条拒绝。`on_removed` 依赖 Astra 3.3.1 修复的移除守卫，低于该版本时不会触发。
+`wave_count` 为 `0` 或小于 `-1` 会整条拒绝。`on_removed` 依赖 Astra 3.3.1 修复的移除守卫（当前桥接下限 4.0.0 已包含）。
 
 ### 5.3 角色句柄
 
@@ -436,13 +436,13 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| `astra.available == false` | Astra 版本低于 3.3.1，或 `Astra.Framework.dll` 未加载；看控制台 `[NekoLua.Astra]` 日志 |
-| `需要 AstraFramework >= 3.3.1，当前: x.y.z` | 升级 Astra；桥接按 3.3.1 签名编译 |
+| `astra.available == false` | Astra 版本低于 4.0.0，或 `Astra.Framework.dll` 未加载；看控制台 `[NekoLua.Astra]` 日志 |
+| `需要 AstraFramework >= 4.0.0，当前: x.y.z` | 升级 Astra；桥接按 4.0.0 签名编译 |
 | `Id 'x' 已被模组 y 占用` | 跨 mod Id 冲突；换 Id，或让原 mod 停止定义 |
 | `必须在主线程调用（当前为后台线程）` | 写操作/hint/audio/countdown/effect 只能在主线程执行 |
 | `该全服级 API 已被服务器禁用（Config.DeniedGlobalApis 含 '标签'）` | 运营者在 `DeniedGlobalApis` 里关闭了对应标签 |
 | 提示无法清除 | `clear` 用了错误 id；保存 `show` 的返回值 |
-| `on_removed` 不触发 | Astra < 3.3.1 的 `RemoveRole` 守卫写反；升级到 3.3.1 |
+| `on_removed` 不触发 | Astra < 3.3.1 的 `RemoveRole` 守卫写反；升级到 4.0.0（3.3.1 修复该守卫，当前桥接下限 4.0.0） |
 | 注册失败但无异常 | 看 `[NekoLua.Astra] ... 暂未注册成功` 警告；`astra.flush()` 会重试，最多 5 帧 |
 
 桥接把 Astra/第三方抛出的 .NET 异常统一转成 Lua `ScriptRuntimeException`；Astra 回调内部抛出的异常只记录日志并返回 `nil` / `false`，不会中断波次或角色流程。
@@ -456,7 +456,8 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 | Astra 2.2.1 | 初版：实例注册/注销 API、波次角色生成器链、事件类注册 |
 | Astra 3.0.1 | Entry 模型适配：`ItemEntry` / `TeamRef` / `RoleEntry`，支持自定义物品与混编阵营 |
 | Astra 3.2.0 | 波次加权：`weight` / `min_players` / `max_players`、`astra.wave.scheduler()` |
-| Astra 3.3.1 | 修复 `CustomRole.RemoveRole` 守卫，`on_removed` 与角色清理生效；当前最低版本 |
+| Astra 3.3.1 | 修复 `CustomRole.RemoveRole` 守卫，`on_removed` 与角色清理生效 |
+| Astra 4.0.0 | 编译基线升至 4.0.0；上游新增回合开始生成（`ISpawnOnRoundStart` / `SpawnPointEntry`），桥接未暴露，team/role/wave 不变；当前最低版本 |
 
 ---
 
@@ -466,4 +467,5 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 - 定义字段是白名单：不接受程序集名、类型名或任意反射入口。
 - 角色/阵营/波次句柄的可写属性 setter 是空实现，不会回写定义；更新一律走 `define`。
 - `wave.table` 中尚未注册的自定义角色 Id 会先登记，等 Astra 刷新解析；解析失败时该条目不会生成。
-- 桥接编译期绑定 Astra 3.3.1 签名；升级 Astra 需要同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与适配器代码。
+- 桥接编译期绑定 Astra 4.0.0 签名；升级 Astra 需要同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与适配器代码。
+- Astra 4.0 的回合开始生成（`ISpawnOnRoundStart` / `SpawnPointEntry` / `MaxSpawnCount`）尚未桥接；需要时由 Astra 原生插件或后续版本提供。
