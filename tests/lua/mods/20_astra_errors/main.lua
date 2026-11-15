@@ -58,6 +58,26 @@ kit.command("lua_err", "Astra 桥接负向测试", function()
         astra.wave.define({ id = "kit_bad_wave2", name = "x", teams = "not_a_table" })
     end, "teams")
 
+    s:throws("role.define 坏 spawn_points 类型", function()
+        astra.role.define({ id = "kit_bad_spawn", name = "x", spawn_points = "not_a_table" })
+    end, "spawn_points")
+
+    s:throws("role.define 坏 probability", function()
+        astra.role.define({
+            id = "kit_bad_spawn2",
+            name = "x",
+            spawn_points = { { probability = 2 } },
+        })
+    end, "probability")
+
+    s:throws("wave.define 坏房间名", function()
+        astra.wave.define({
+            id = "kit_bad_room",
+            name = "x",
+            spawn_points = { { room = "NotARoom" } },
+        })
+    end, "room")
+
     s:throws("role.give 无玩家", function()
         astra.role.give(nil, "kit_err_role")
     end, "astra.role.give")

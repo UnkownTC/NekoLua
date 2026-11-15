@@ -1,5 +1,8 @@
 using Astra.Items;
+using Astra.Positions;
 using Astra.Teams;
+
+using MapGeneration;
 
 using MoonSharp.Interpreter;
 
@@ -22,6 +25,14 @@ internal sealed class TeamDefinition
     public RelationEntry[] Whitelist = [];
 }
 
+/// <summary>刷怪点定义：位置、可选朝向与生成概率。</summary>
+internal sealed class SpawnPointSpec
+{
+    public PositionEntry Position;
+    public Quaternion? Rotation;
+    public float Probability = 1f;
+}
+
 internal sealed class RoleDefinition
 {
     public string Id = string.Empty;
@@ -40,6 +51,8 @@ internal sealed class RoleDefinition
     public string[] Waves = [];
     public int WaveSpawnCount = 1;
     public Dictionary<string, int>? WaveCounts;
+    public SpawnPointSpec[] SpawnPoints = [];
+    public int MaxSpawnCount;
     public DynValue? OnAdded;
     public DynValue? OnRemoved;
 }
@@ -59,6 +72,8 @@ internal sealed class WaveDefinition
     public string? Announcement;
     public string? AnnouncementTranslation;
     public Dictionary<string, int>? Table;
+    public SpawnPointSpec[] SpawnPoints = [];
+    public int MaxSpawnCount;
     public DynValue? AllowSpawn;
 }
 
@@ -93,6 +108,8 @@ internal static class DefinitionParser
     {
         const string ctx = "astra.role.define";
 
+        var spawnPoints = ParseSpawnPoints(t, ctx);
+
         var def = new RoleDefinition
         {
             Id = RequireId(t, ctx),
@@ -111,6 +128,8 @@ internal static class DefinitionParser
             Waves = LuaSpec.OptionalStringArray(t, "waves", ctx),
             WaveSpawnCount = (int)LuaSpec.OptionalNumber(t, "wave_count", ctx, 1f),
             WaveCounts = LuaSpec.OptionalIntMap(t, "wave_counts", ctx),
+            SpawnPoints = spawnPoints,
+            MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
             OnAdded = LuaSpec.OptionalCallback(t, "on_added", ctx),
             OnRemoved = LuaSpec.OptionalCallback(t, "on_removed", ctx),
         };
@@ -124,6 +143,8 @@ internal static class DefinitionParser
     public static WaveDefinition ParseWave(Table t)
     {
         const string ctx = "astra.wave.define";
+
+        var spawnPoints = ParseSpawnPoints(t, ctx);
 
         return new WaveDefinition
         {
@@ -140,6 +161,8 @@ internal static class DefinitionParser
             Announcement = LuaSpec.OptionalString(t, "announcement", ctx),
             AnnouncementTranslation = LuaSpec.OptionalString(t, "announcement_translation", ctx),
             Table = LuaSpec.OptionalIntMap(t, "table", ctx),
+            SpawnPoints = spawnPoints,
+            MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
             AllowSpawn = LuaSpec.OptionalCallback(t, "allow_spawn", ctx),
         };
     }
@@ -198,6 +221,141 @@ internal static class DefinitionParser
                 throw LuaSpec.Error(ctx, $"{key}[{i + 1}] 既不是合法 ItemType，也不是合法的自定义物品 Id");
 
             result[i] = ItemEntry.Custom(raw[i]);
+        }
+
+        return result;
+    }
+
+    private static int ParseMaxSpawnCount(Table t, string ctx, int pointCount)
+    {
+        var value = t.Get("max_spawn_count");
+
+        if (value.IsNil())
+            return pointCount;
+
+        if (value.Type != DataType.Number)
+            throw LuaSpec.Error(ctx, "max_spawn_count 必须是数字");
+
+        var count = value.Number;
+
+        if (double.IsNaN(count) || count < 0 || count > int.MaxValue || Math.Floor(count) != count)
+            throw LuaSpec.Error(ctx, "max_spawn_count 必须是非负整数");
+
+        return (int)count;
+    }
+
+    private static SpawnPointSpec[] ParseSpawnPoints(Table t, string ctx)
+    {
+        var value = t.Get("spawn_points");
+
+        if (value.IsNil())
+            return [];
+
+        if (value.Type != DataType.Table)
+            throw LuaSpec.Error(ctx, "spawn_points 必须是数组");
+
+        List<SpawnPointSpec> result = [];
+        var index = 0;
+
+        foreach (var item in LuaSpec.Sequence(value.Table))
+        {
+            index++;
+
+            if (item.Type != DataType.Table)
+                throw LuaSpec.Error(ctx, $"spawn_points[{index}] 必须是表");
+
+            result.Add(ParseSpawnPoint(item.Table, ctx, index));
+        }
+
+        return [.. result];
+    }
+
+    private static SpawnPointSpec ParseSpawnPoint(Table t, string ctx, int index)
+    {
+        var room = OptionalEnumOrNull<RoomName>(t, "room", ctx, index);
+        var zone = OptionalEnumOrNull<FacilityZone>(t, "zone", ctx, index);
+        var shape = OptionalEnumOrNull<RoomShape>(t, "shape", ctx, index);
+        var local = ReadVector(t, ctx, index);
+
+        var hasFilter = room.HasValue || zone.HasValue || shape.HasValue;
+        var position = hasFilter
+            ? PositionEntry.Find(room, zone, shape, local)
+            : PositionEntry.Find(local);
+
+        var yaw = OptionalNumber(t, "yaw", ctx, index);
+        var probability = OptionalNumber(t, "probability", ctx, index) ?? 1f;
+
+        if (probability < 0f || probability > 1f)
+            throw LuaSpec.Error(ctx, $"spawn_points[{index}].probability 必须在 0~1 之间");
+
+        return new SpawnPointSpec
+        {
+            Position = position,
+            Rotation = yaw.HasValue ? Quaternion.Euler(0f, yaw.Value, 0f) : null,
+            Probability = probability,
+        };
+    }
+
+    private static Vector3 ReadVector(Table t, string ctx, int index)
+    {
+        var x = OptionalNumber(t, "x", ctx, index);
+        var y = OptionalNumber(t, "y", ctx, index);
+        var z = OptionalNumber(t, "z", ctx, index);
+
+        return new Vector3(x ?? 0f, y ?? 0f, z ?? 0f);
+    }
+
+    private static float? OptionalNumber(Table t, string key, string ctx, int index)
+    {
+        var value = t.Get(key);
+
+        if (value.IsNil())
+            return null;
+
+        if (value.Type != DataType.Number)
+            throw LuaSpec.Error(ctx, $"spawn_points[{index}].{key} 必须是数字");
+
+        var number = (float)value.Number;
+
+        if (float.IsNaN(number) || float.IsInfinity(number))
+            throw LuaSpec.Error(ctx, $"spawn_points[{index}].{key} 必须是有限数字");
+
+        return number;
+    }
+
+    private static TEnum? OptionalEnumOrNull<TEnum>(Table t, string key, string ctx, int index)
+        where TEnum : struct, Enum
+    {
+        var value = t.Get(key);
+
+        if (value.IsNil())
+            return null;
+
+        if (value.Type != DataType.String)
+            throw LuaSpec.Error(ctx, $"spawn_points[{index}].{key} 必须是字符串枚举名");
+
+        if (!Enum.TryParse(value.String, true, out TEnum parsed) || !Enum.IsDefined(typeof(TEnum), parsed))
+            throw LuaSpec.Error(ctx, $"spawn_points[{index}].{key} = '{value.String}' 不是合法取值");
+
+        return parsed;
+    }
+}
+
+/// <summary>把定义里的刷怪点折叠成 Astra 需要的只读字典（同一位置合并为最大概率）。</summary>
+internal static class SpawnPointMapping
+{
+    public static IReadOnlyDictionary<SpawnPointEntry, float> Build(IEnumerable<SpawnPointSpec> specs)
+    {
+        Dictionary<SpawnPointEntry, float> result = [];
+
+        foreach (var spec in specs)
+        {
+            var entry = new SpawnPointEntry(spec.Position, spec.Rotation);
+
+            if (result.ContainsKey(entry))
+                result[entry] = Math.Max(result[entry], spec.Probability);
+            else
+                result.Add(entry, spec.Probability);
         }
 
         return result;

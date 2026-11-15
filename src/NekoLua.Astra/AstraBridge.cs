@@ -115,7 +115,7 @@ internal static class AstraBridge
         if (!_available)
         {
             Logger.Error(
-                $"[NekoLua.Astra] 需要 AstraFramework >= {MinimumAstraVersion}，当前: {AstraVersionText}；astra 表将不可用");
+                $"[NekoLua.Astra] 需要 AstraFramework >= {MinimumAstraVersion}，当前: {AstraVersionText}；astra 表保留但调用会报错");
             return;
         }
 

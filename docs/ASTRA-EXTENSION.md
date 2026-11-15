@@ -16,7 +16,7 @@
 | Astra 3.0.1 适配：`Items` 改 `ItemEntry`（支持自定义物品 Id）、`Teams` 改 `TeamRef`（原版/自定义混编）、`Table` 改 `RoleEntry`、生成器实现 `ICustomWaveRoleSpawnerV2` | 已完成 |
 | Astra 3.2.0 适配：波次可声明 `weight` / `min_players` / `max_players`（`IWeightedWave`），可直接进 `WaveScheduler` / `SupportWavePool` | 已完成 |
 | Astra 3.3.1 修复：`CustomRole.RemoveRole` 守卫写反（`if (Check(player)) return;`），所有移除路径都不触发 `OnRemoved` 与属性回收；桥接最低版本提升到 3.3.1 | 已完成（Astra `41ebe5b`） |
-| Astra 4.0.0 适配：编译依赖升级 `libs/astra/4.0.0/`；4.0 的 `ISpawnOnRoundStart` 为上游 BREAKING，桥接未实现该接口，team/role/wave 适配无需改动 | 已完成 |
+| Astra 4.0.0 适配：编译依赖升级 `libs/astra/4.0.0/`；桥接为角色/波次实现 `ISpawnOnRoundStart`（`spawn_points` / `max_spawn_count`），team/role/wave 原有字段不变 | 已完成 |
 | `astra.ability`（v2）、`astra.effect.define`（v2）、`astra.item`（v3）、`astra.patch`（不做） | 未实现 |
 | 实机冒烟（游戏内加载示例 mod） | 待服务端验证 |
 
@@ -511,6 +511,8 @@ sched.reset()
 
 > 3.0 起 `table` 的键可以是自定义角色 Id，也可以是原版 `RoleTypeId` 名；不定 `table` 时由角色侧 `waves` + `wave_count` / `wave_counts` 聚合。
 
+> 4.0+：角色和波次都可以加 `spawn_points`（世界坐标或房间/区域筛选 + 本地坐标）和 `max_spawn_count`，由 Astra 的 `RoundStartSpawnManager` 在原版分配完成后生成；桥接已实现 `ISpawnOnRoundStart`，物品刷怪点仍未暴露。字段见 `docs/API-ASTRA.md` §6.5。
+
 ### 7.5 其它 API 分级
 
 | 级别 | API | 说明 |
@@ -624,6 +626,6 @@ print(astra.role.get(p) ~= nil)
 
 **开放问题**
 
-1. **后续 Astra 版本的兼容上限**：桥接只校验最低版本（4.0.0）；4.0 的回合开始生成 API 尚未桥接，再改 Entry / 注册模型需要重新适配；升级前关注 Astra 发布说明。
+1. **后续 Astra 版本的兼容上限**：桥接只校验最低版本（4.0.0）；角色/波次的回合开始生成已桥接，但 Astra 4.0 的物品刷怪点、位置/传送 API 仍未暴露；再改 Entry / 注册模型需要重新适配，升级前关注 Astra 发布说明。
 2. **per-wave 角色数量**：目前 `wave_count` 统一值 + `wave_counts` 覆盖；更细粒度取决于 Astra 上游 `IWaveSpawnCountProvider` 的演进（A5）。
 3. **v2 ability / v3 item**：v1 已明确不做；是否投入取决于玩法是否真的需要按键技能 / 自定义物品（各约 +500 行）。

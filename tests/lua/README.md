@@ -5,8 +5,8 @@
 | 编号 | 插件 | 覆盖内容 | 命令 |
 |---|---|---|---|
 | 00 | `00_runtime` | nekolua / player / log / storage / json / eventbus / eventhook / timer / command | `lua_rt` |
-| 10 | `10_astra_content` | Astra 阵营/角色/波次定义与查询、give/get/remove、spawn、hint/audio/countdown/effect、`eventhook astraplayer` | `lua_astra` |
-| 20 | `20_astra_errors` | 定义字段校验、未知波次、无玩家、重复 Id、未知枚举等负向路径 | `lua_err` |
+| 10 | `10_astra_content` | Astra 阵营/角色/波次定义与查询、give/get/remove、spawn、spawn_points/max_spawn_count、hint/audio/countdown/effect、`eventhook astraplayer` | `lua_astra` |
+| 20 | `20_astra_errors` | 定义字段校验、spawn_points 字段校验、未知波次、无玩家、重复 Id、未知枚举等负向路径 | `lua_err` |
 | 30 | `30_astra_scheduler` | `astra.wave.scheduler()`：权重排序、人数门槛跳过、剩余数量、支援池 | `lua_sched` |
 | 40 | `40_core_api` | base64 / csv / regex / crypto / buffer / meta / encoding / bit / random / datetime / version / uuid / vector3 / mathx / template / try / pool | `lua_core` |
 | 50 | `50_hotreload` | `nekolua reload` 后的 timer / eventhook / eventbus / Astra 内容回收 | `lua_hr` |

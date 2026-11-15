@@ -211,6 +211,8 @@ print(team.vanillaTeam)     -- 成员名大小写不敏感
 | `waves` | `table` | `{}` | 角色所属波次 Id 列表 |
 | `wave_count` | `number` | `1` | 每个波次生成数量；必须是正整数或 `-1`（填充剩余名额） |
 | `wave_counts` | `table` | `nil` | `{ [waveId] = count }`，按波次覆盖 `wave_count` |
+| `spawn_points` | `table` | `{}` | 回合开始刷怪点数组，见 §6.5 |
+| `max_spawn_count` | `number` | 刷怪点数量 | 回合开始最多替换的玩家数；`0` 关闭，省略时取刷怪点数量 |
 | `on_added` | `function` | `nil` | 角色添加回调 `function(ply)` |
 | `on_removed` | `function` | `nil` | 角色移除回调 `function(ply)` |
 
@@ -261,6 +263,8 @@ print(role.waveSpawnCount)
 | `announcement` | `string` | `nil` | 波次公告 |
 | `announcement_translation` | `string` | `nil` | 公告翻译键 |
 | `table` | `table` | `nil` | 角色生成表：`{ [自定义角色Id或RoleTypeId] = 数量 }` |
+| `spawn_points` | `table` | `{}` | 回合开始刷怪点数组，见 §6.5 |
+| `max_spawn_count` | `number` | 刷怪点数量 | 回合开始最多生成的玩家数；`0` 关闭，省略时取刷怪点数量 |
 | `allow_spawn` | `function` | `nil` | `function(ply) -> boolean`，返回 `true` 才生成该玩家 |
 
 `table` 的键先按已注册自定义角色匹配，再按原版 `RoleTypeId` 解析；还没有注册的自定义角色 Id 会被登记为 `RoleEntry.Custom`，等 Astra 刷新时按 Id 解析。
@@ -294,6 +298,39 @@ end
 ### 6.4 波次句柄
 
 常用成员：`id`、`name`、`teams`、`weight`、`minPlayers`、`maxPlayers`、`modifyThreat`、`customThreat`、`spawnProtect`、`spawnProtectDuration`、`announcement`、`announcementTranslation`、`table`。
+
+### 6.5 回合开始生成（Astra 4.0+）
+
+角色和波次都可以声明 `spawn_points`，由 Astra 的 `RoundStartSpawnManager` 在原版角色分配完成后生成：`role` 直接替换候选玩家，`wave` 按 `table` 的角色与数量依次替换。桥接适配器实现了 `ISpawnOnRoundStart`，定义注册后自动参与，不需要额外调用。
+
+```lua
+astra.role.define {
+    id = "chaos_elite",
+    name = "精英步枪手",
+    role_type = "ChaosRifleman",
+    max_health = 200,
+    spawn_points = {
+        { room = "Hcz049", x = 0, y = 1, z = 0, yaw = 180, probability = 1 },
+        { zone = "LightContainment", x = 0, y = 0, z = 0, probability = 0.5 },
+        { x = 0, y = 0, z = 0 },  -- 省略筛选条件时按世界坐标
+    },
+    max_spawn_count = 2,
+}
+```
+
+| 刷怪点字段 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `x` / `y` / `z` | `number` | `0` | 坐标；有 `room`/`zone`/`shape` 时是房间内本地坐标，否则是世界坐标 |
+| `room` | `string` | `nil` | `RoomName` 枚举名（如 `Hcz049`、`LczClassDSpawn`） |
+| `zone` | `string` | `nil` | `FacilityZone` 枚举名：`LightContainment` / `HeavyContainment` / `Entrance` / `Surface` |
+| `shape` | `string` | `nil` | `RoomShape` 枚举名：`Endroom` / `Straight` / `Curve` / `TShape` / `XShape` |
+| `yaw` | `number` | 随机 | 水平朝向（角度）；省略时随机朝向 |
+| `probability` | `number` | `1` | 该点生成概率，`0`~`1`；`0` 跳过 |
+
+- 筛选条件可组合，未给出的条件视为不限；解析时在匹配房间中随机选房，因此同一筛选点的实际位置可能每回合不同。
+- `max_spawn_count` 是单回合最多替换的玩家数；省略时等于刷怪点数量，`0` 表示不在回合开始生成。每局每个点最多使用一次。
+- 角色只在存活、尚未持有自定义角色、且 `role_type` 匹配（`None` 表示不限）的玩家中挑选；波次按 `table` 的角色和数量顺序填充，数量 `-1` 表示填充剩余名额。
+- 概率、枚举名与坐标在 `define` 时校验；任一字段非法会整条拒绝定义。
 
 ---
 
@@ -457,7 +494,7 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 | Astra 3.0.1 | Entry 模型适配：`ItemEntry` / `TeamRef` / `RoleEntry`，支持自定义物品与混编阵营 |
 | Astra 3.2.0 | 波次加权：`weight` / `min_players` / `max_players`、`astra.wave.scheduler()` |
 | Astra 3.3.1 | 修复 `CustomRole.RemoveRole` 守卫，`on_removed` 与角色清理生效 |
-| Astra 4.0.0 | 编译基线升至 4.0.0；上游新增回合开始生成（`ISpawnOnRoundStart` / `SpawnPointEntry`），桥接未暴露，team/role/wave 不变；当前最低版本 |
+| Astra 4.0.0 | 编译基线升至 4.0.0；桥接角色/波次实现 `ISpawnOnRoundStart`，新增 `spawn_points` / `max_spawn_count`；当前最低版本 |
 
 ---
 
@@ -468,4 +505,5 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 - 角色/阵营/波次句柄的可写属性 setter 是空实现，不会回写定义；更新一律走 `define`。
 - `wave.table` 中尚未注册的自定义角色 Id 会先登记，等 Astra 刷新解析；解析失败时该条目不会生成。
 - 桥接编译期绑定 Astra 4.0.0 签名；升级 Astra 需要同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与适配器代码。
-- Astra 4.0 的回合开始生成（`ISpawnOnRoundStart` / `SpawnPointEntry` / `MaxSpawnCount`）尚未桥接；需要时由 Astra 原生插件或后续版本提供。
+- 回合开始生成只覆盖角色与波次；Astra 的物品刷怪点（`CustomItem` 实现 `ISpawnOnRoundStart`）没有对应 Lua 接口。
+- 刷怪点没有运行时查询接口（定义只写不读）；需要确认定义是否生效时，用 `astra.role.find` / `astra.wave.find` 检查 Id，或观察回合开始日志。

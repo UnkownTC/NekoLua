@@ -3,7 +3,7 @@
 - **项目路径**：`src/NekoLua/`
 - **文档版本**：`v6`
 - **最后同步**：2026-11-16 @ Astra 4.0.0 适配（编译基线升级）
-- **同步原因**：桥接依赖升级到 `libs/astra/4.0.0/`；Astra 4.0.0 新增回合开始生成（`ISpawnOnRoundStart` / `SpawnPointEntry`）且对实现方是 BREAKING，但桥接未实现该接口，现有 team/role/wave 适配代码无需改动；桥接最低版本提升到 4.0.0
+- **同步原因**：桥接依赖升级到 `libs/astra/4.0.0/`；Astra 4.0.0 新增回合开始生成（`ISpawnOnRoundStart` / `SpawnPointEntry`）且对实现方是 BREAKING，桥接为角色/波次实现了该接口（新增 `spawn_points` / `max_spawn_count` 字段）；桥接最低版本提升到 4.0.0
 - **负责人**：WorkBuddy（deepseek-v4.1-flash）
 
 ---
@@ -212,7 +212,8 @@ flowchart TD
 | 2026-11-14 | Astra 3.2.0 适配 | `astra.wave.define` 增加 `weight` / `min_players` / `max_players`（`LuaCustomWave` 实现 `IWeightedWave`，可被 `WaveScheduler` / `SupportWavePool` 使用）；最低 Astra 版本 3.2.0 | §4 |
 | 2026-11-14 | Astra 3.3.1 适配 | 依赖升级 `libs/astra/3.3.1/`；修复 `CustomRole.RemoveRole` 守卫，`OnRemoved` 与角色属性回收恢复；桥接最低版本 3.3.1 | §4 |
 | 2026-11-14 | `0672651` | 扩展装载改为 `Assembly.Load(byte[])`（不再锁定 DLL，覆盖后重启 / 重新启用生效）；扩展之间不保证程序集解析，不能依赖 `extensions/` 内其它 DLL | §2 / §4 |
-| 2026-11-16 | Astra 4.0.0 适配 | 依赖升级 `libs/astra/4.0.0/`；桥接按 4.0.0 编译验证，最低版本 4.0.0；未暴露回合开始生成 API | §4 |
+| 2026-11-16 | Astra 4.0.0 适配 | 依赖升级 `libs/astra/4.0.0/`；桥接按 4.0.0 编译验证，最低版本 4.0.0 | §4 |
+| 2026-11-16 | 桥接回合开始生成 | 角色/波次实现 `ISpawnOnRoundStart`，新增 `spawn_points` / `max_spawn_count` | §4 |
 
 ---
 

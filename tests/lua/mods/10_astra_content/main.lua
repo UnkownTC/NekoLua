@@ -35,6 +35,10 @@ astra.role.define {
     show_custom_info = true,
     waves = { "kit_wave" },
     wave_count = 1,
+    spawn_points = {
+        { x = 0, y = 0, z = 0, yaw = 90 },
+    },
+    max_spawn_count = 0,
     on_added = function(ply)
         storage.set("kit_role_added", true)
     end,
@@ -52,6 +56,10 @@ astra.wave.define {
     min_players = 0,
     announcement = "测试波次",
     spawn_protect = false,
+    spawn_points = {
+        { zone = "LightContainment", x = 0, y = 0, z = 0, probability = 0.25 },
+    },
+    max_spawn_count = 0,
 }
 
 local function countWhere(list, idField, expected)

@@ -1,4 +1,5 @@
 using Astra.Items;
+using Astra.Positions;
 using Astra.Roles;
 using Astra.Teams;
 using Astra.Waves;
@@ -51,7 +52,7 @@ internal sealed class LuaCustomTeam : CustomTeam
 /// Lua 定义的角色适配器。模板实例与玩家实例都只持有 Id，
 /// 每次读取定义时取「当前版本」，实现长生命周期模板 + 可替换定义。
 /// </summary>
-internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider
+internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider, ISpawnOnRoundStart
 {
     private readonly string _id;
     private readonly RoleDefinition _fallback;
@@ -153,6 +154,10 @@ internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider
             : Def.WaveSpawnCount;
     }
 
+    public int MaxSpawnCount => Def.MaxSpawnCount;
+
+    public IReadOnlyDictionary<SpawnPointEntry, float> SpawnPoints => SpawnPointMapping.Build(Def.SpawnPoints);
+
     public override CustomRole CreateInstance() => new LuaCustomRole(Def);
 
     protected override void OnAdded(Player player) => AstraBridge.InvokeCallback(_id, Def.OnAdded, player);
@@ -161,7 +166,7 @@ internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider
 }
 
 /// <summary>Lua 定义的波次适配器（3.1+ 同时实现加权波次契约）。</summary>
-internal sealed class LuaCustomWave : CustomWave, IWeightedWave
+internal sealed class LuaCustomWave : CustomWave, IWeightedWave, ISpawnOnRoundStart
 {
     private readonly string _id;
     private readonly WaveDefinition _fallback;
@@ -250,6 +255,10 @@ internal sealed class LuaCustomWave : CustomWave, IWeightedWave
 
         return table;
     }
+
+    public int MaxSpawnCount => Def.MaxSpawnCount;
+
+    public IReadOnlyDictionary<SpawnPointEntry, float> SpawnPoints => SpawnPointMapping.Build(Def.SpawnPoints);
 
     public override bool CheckAllowSpawn(Player player) =>
         AstraBridge.InvokePredicate(_id, Def.AllowSpawn, player);
