@@ -7,7 +7,7 @@ SCP: Secret Laboratory 服务端 Lua 脚本插件（LabAPI），基于 MoonSharp
 
 ```
 src/NekoLua/          插件源码（核心，不引用任何其它插件工程）
-src/NekoLua.Astra/    可选桥接工程：把 AstraFramework 的 CustomRole/Team/Wave 暴露给 Lua
+src/NekoLua.Astra/    可选桥接工程：把 AstraFramework 的 CustomTeam/CustomRole/CustomItem/CustomWave 暴露给 Lua
 libs/                 只读依赖（游戏、LabAPI 与可选桥接的 Astra 程序集）
 tools/vsbuild.py      构建入口（net481 必需）
 ```

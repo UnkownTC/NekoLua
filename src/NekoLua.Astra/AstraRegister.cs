@@ -3,6 +3,7 @@ using Astra.Countdown;
 using Astra.Effects;
 using Astra.Enums;
 using Astra.Hints;
+using Astra.Items;
 using Astra.Roles;
 using Astra.Teams;
 using Astra.Waves;
@@ -25,6 +26,7 @@ namespace NekoLua.AstraBridge;
 ///   astra.available / version / api_version / flush()
 ///   astra.team.define/find/list
 ///   astra.role.define/give/remove/get/find/list
+///   astra.item.define/give/find/list
 ///   astra.wave.define/spawn/find/list
 ///   astra.hint.show/clear
 ///   astra.audio.play/stop
@@ -53,6 +55,7 @@ public sealed class AstraRegister : IRegisterLua
             }),
             ["team"] = BuildTeam(script, mod, content),
             ["role"] = BuildRole(script, mod, content),
+            ["item"] = BuildItem(script, mod, content),
             ["wave"] = BuildWave(script, mod, content),
             ["hint"] = BuildHint(script),
             ["audio"] = BuildAudio(script),
@@ -177,6 +180,62 @@ public sealed class AstraRegister : IRegisterLua
 
             foreach (var role in CustomRoleApi.RoleTemplates)
                 array[index++] = content.Cache.Wrap(role);
+
+            return DynValue.NewTable(array);
+        });
+
+        return t;
+    }
+
+    private static Table BuildItem(Script script, LuaModInstance mod, ModContent content)
+    {
+        var t = new Table(script);
+
+        t["define"] = DynValue.NewCallback((_, args) =>
+        {
+            const string api = "astra.item.define(def)";
+            EnsureAvailable(api);
+            EnsureMainThread(api);
+            Guard("astra.item", api);
+
+            var definition = DefinitionParser.ParseItem(RequireTable(args, 0, api));
+            AstraBridge.DefineItem(mod, definition);
+            return DynValue.NewString(definition.Id);
+        });
+
+        t["give"] = DynValue.NewCallback((_, args) =>
+        {
+            const string api = "astra.item.give(ply, id)";
+            EnsureAvailable(api);
+            EnsureMainThread(api);
+            Guard("astra.item", api);
+
+            return Guarded(api, () =>
+            {
+                var player = LuaArgs.ResolvePlayer(args, 0, api);
+                var id = RequireString(args, 1, api);
+                return DynValue.NewBoolean(CustomItemApi.Give(player, id) is not null);
+            });
+        });
+
+        t["find"] = DynValue.NewCallback((_, args) =>
+        {
+            const string api = "astra.item.find(id)";
+            EnsureAvailable(api);
+
+            var item = CustomItemApi.Find(RequireString(args, 0, api));
+            return item is null ? DynValue.Nil : content.Cache.Wrap(item);
+        });
+
+        t["list"] = DynValue.NewCallback((_, _) =>
+        {
+            EnsureAvailable("astra.item.list()");
+
+            var array = new Table(script);
+            var index = 1;
+
+            foreach (var item in CustomItemApi.Items.Values)
+                array[index++] = content.Cache.Wrap(item);
 
             return DynValue.NewTable(array);
         });

@@ -48,6 +48,35 @@ internal sealed class LuaCustomTeam : CustomTeam
     public override IReadOnlyList<RelationEntry> Whitelist => Def.Whitelist;
 }
 
+/// <summary>Lua 定义的物品适配器：承载原版物品类型，并参与回合开始刷怪点生成。</summary>
+internal sealed class LuaCustomItem : CustomItem, ISpawnOnRoundStart
+{
+    private readonly string _id;
+    private readonly ItemDefinition _fallback;
+
+    public LuaCustomItem(ItemDefinition definition)
+    {
+        _id = definition.Id;
+        _fallback = definition;
+    }
+
+    private ItemDefinition Def => AstraBridge.ItemDef(_id) ?? _fallback;
+
+    public override string Id => _id;
+
+    public override string Name => Def.Name;
+
+    public override ItemType BaseItem => Def.BaseItem;
+
+    public override string Description => Def.Description;
+
+    public override float Weight => Def.Weight;
+
+    public int MaxSpawnCount => Def.MaxSpawnCount;
+
+    public IReadOnlyDictionary<SpawnPointEntry, float> SpawnPoints => SpawnPointMapping.Build(Def.SpawnPoints);
+}
+
 /// <summary>
 /// Lua 定义的角色适配器。模板实例与玩家实例都只持有 Id，
 /// 每次读取定义时取「当前版本」，实现长生命周期模板 + 可替换定义。

@@ -47,6 +47,18 @@ astra.role.define {
     end,
 }
 
+-- 物品（回合开始刷怪点；max_spawn_count=0 避免测试服实际生成）
+astra.item.define {
+    id = "kit_item",
+    name = "测试物品",
+    description = "NekoLua 测试用自定义物品",
+    base_item = "Coin",
+    spawn_points = {
+        { x = 0, y = 0, z = 0, probability = 0.5 },
+    },
+    max_spawn_count = 0,
+}
+
 -- 波次
 astra.wave.define {
     id = "kit_wave",
@@ -87,9 +99,11 @@ kit.command("lua_astra", "Astra 桥接内容与运行时测试", function()
 
     s:eq("team.find", astra.team.find("kit_team").id, "kit_team")
     s:eq("role.find", astra.role.find("kit_role").id, "kit_role")
+    s:eq("item.find", astra.item.find("kit_item").id, "kit_item")
     s:eq("wave.find", astra.wave.find("kit_wave").id, "kit_wave")
 
     s:eq("角色只注册一次", countWhere(astra.role.list(), "id", "kit_role"), 1)
+    s:eq("物品只注册一次", countWhere(astra.item.list(), "id", "kit_item"), 1)
     s:eq("波次只注册一次", countWhere(astra.wave.list(), "id", "kit_wave"), 1)
 
     -- 空玩家表 + 波次表为空：返回空数组且不抛错
@@ -122,12 +136,16 @@ kit.command("lua_astra", "Astra 桥接内容与运行时测试", function()
     trace("after-firstPlayer ply=" .. tostring(ply ~= nil))
     if ply == nil then
         s:skip("role.give/get/remove", "没有在线玩家")
+        s:skip("item.give", "没有在线玩家")
         s:skip("hint.show/clear", "没有在线玩家")
         s:skip("effect.apply/remove", "没有在线玩家")
     else
         trace("before-give")
         s:truthy("role.give", astra.role.give(ply, "kit_role"))
         trace("after-give")
+
+        s:truthy("item.give", astra.item.give(ply, "kit_item"))
+        trace("after-item-give")
 
         s:eq("role.get", astra.role.get(ply).id, "kit_role")
         trace("after-get")

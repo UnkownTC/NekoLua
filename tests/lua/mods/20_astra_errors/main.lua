@@ -78,6 +78,25 @@ kit.command("lua_err", "Astra 桥接负向测试", function()
         })
     end, "room")
 
+    s:throws("item.define 缺 base_item", function()
+        astra.item.define({ id = "kit_bad_item", name = "x" })
+    end, "base_item")
+
+    s:throws("item.define 坏 base_item", function()
+        astra.item.define({ id = "kit_bad_item2", name = "x", base_item = "NotAnItem" })
+    end, "base_item")
+
+    s:throws("item.define 坏 spawn_points 类型", function()
+        astra.item.define({ id = "kit_bad_item3", name = "x", base_item = "Coin", spawn_points = "nope" })
+    end, "spawn_points")
+
+    s:run("同 Id 跨类型定义（角色先占用）", function()
+        astra.role.define({ id = "kit_cross_id", name = "跨类型角色" })
+    end)
+    s:throws("item.define 复用角色 Id", function()
+        astra.item.define({ id = "kit_cross_id", name = "x", base_item = "Coin" })
+    end, "同模组的")
+
     s:throws("role.give 无玩家", function()
         astra.role.give(nil, "kit_err_role")
     end, "astra.role.give")

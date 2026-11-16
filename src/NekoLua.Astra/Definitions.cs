@@ -77,6 +77,18 @@ internal sealed class WaveDefinition
     public DynValue? AllowSpawn;
 }
 
+/// <summary>Lua 定义的物品：承载原版物品类型、可选名称/描述/重量与回合开始刷怪点。</summary>
+internal sealed class ItemDefinition
+{
+    public string Id = string.Empty;
+    public string Name = string.Empty;
+    public ItemType BaseItem;
+    public string Description = string.Empty;
+    public float Weight = -1f;
+    public SpawnPointSpec[] SpawnPoints = [];
+    public int MaxSpawnCount;
+}
+
 /// <summary>
 /// Lua 定义表 → C# 不可变定义。
 /// </summary>
@@ -164,6 +176,28 @@ internal static class DefinitionParser
             SpawnPoints = spawnPoints,
             MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
             AllowSpawn = LuaSpec.OptionalCallback(t, "allow_spawn", ctx),
+        };
+    }
+
+    public static ItemDefinition ParseItem(Table t)
+    {
+        const string ctx = "astra.item.define";
+
+        var spawnPoints = ParseSpawnPoints(t, ctx);
+        var baseItem = LuaSpec.OptionalEnum(t, "base_item", ctx, ItemType.None);
+
+        if (baseItem == ItemType.None)
+            throw LuaSpec.Error(ctx, "base_item 必须是原版 ItemType 名（不能为空或 None）");
+
+        return new ItemDefinition
+        {
+            Id = RequireId(t, ctx),
+            Name = LuaSpec.RequiredString(t, "name", ctx),
+            BaseItem = baseItem,
+            Description = LuaSpec.OptionalString(t, "description", ctx) ?? string.Empty,
+            Weight = LuaSpec.OptionalNumber(t, "weight", ctx, -1f),
+            SpawnPoints = spawnPoints,
+            MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
         };
     }
 

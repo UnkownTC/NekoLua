@@ -16,7 +16,7 @@ astra.team.define {
     vanilla_team = "ChaosInsurgency",
     keep_vanilla = false,
     friendly = { "ChaosInsurgency" },
-    hostile = { "Mtf", "NineTailedFox" },
+    hostile = { "NineTailedFox" },
 }
 
 -- 角色：精英霰弹手（200 血，自带霰弹枪与医疗包）
@@ -55,6 +55,18 @@ astra.wave.define {
     threat = 1.2,
 }
 
+-- 物品：回合开始时在轻收容区生成 2 个医疗包拾取物（4.0+）
+astra.item.define {
+    id = "chaos_supply",
+    name = "混沌补给",
+    description = "混沌精英投放的医疗包",
+    base_item = "Medkit",
+    spawn_points = {
+        { zone = "LightContainment", x = 0, y = 1, z = 0, probability = 0.5 },
+    },
+    max_spawn_count = 2,
+}
+
 -- 每 120 秒刷一次（timer.every 会一直重复）
 timer.every(120, "chaos_wave_timer", function()
     local spawned = astra.wave.spawn("chaos_wave", player.list())
@@ -69,4 +81,5 @@ eventhook.bind("astraplayer", "Shooting", "astra_demo_shooting", function(ev)
     end
 end)
 
-print("[astra_demo] 已注册: " .. #astra.role.list() .. " 个角色, " .. #astra.wave.list() .. " 个波次")
+print("[astra_demo] 已注册: " .. #astra.role.list() .. " 个角色, "
+    .. #astra.item.list() .. " 个物品, " .. #astra.wave.list() .. " 个波次")

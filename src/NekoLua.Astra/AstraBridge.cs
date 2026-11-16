@@ -1,3 +1,4 @@
+using Astra.Items;
 using Astra.Roles;
 using Astra.Teams;
 using Astra.Waves;
@@ -21,6 +22,7 @@ internal enum ContentKind
 {
     Team,
     Wave,
+    Item,
     Role,
 }
 
@@ -53,6 +55,7 @@ internal sealed class ContentEntry
     public ModContent Owner = null!;
     public object? Adapter;
     public TeamDefinition? Team;
+    public ItemDefinition? Item;
     public RoleDefinition? Role;
     public WaveDefinition? Wave;
 }
@@ -237,6 +240,18 @@ internal static class AstraBridge
         return entry.State == ContentState.Registered;
     }
 
+    /// <summary>定义/更新一个物品。</summary>
+    public static bool DefineItem(LuaModInstance mod, ItemDefinition definition)
+    {
+        var entry = Upsert(mod, ContentKind.Item, definition.Id, e =>
+        {
+            e.Item = definition;
+            e.Adapter ??= new LuaCustomItem(definition);
+        }, "astra.item.define");
+
+        return entry.State == ContentState.Registered;
+    }
+
     /// <summary>定义/更新一个角色。</summary>
     public static bool DefineRole(LuaModInstance mod, RoleDefinition definition)
     {
@@ -254,6 +269,9 @@ internal static class AstraBridge
 
     public static RoleDefinition? RoleDef(string id) =>
         _entries.TryGetValue(id, out var entry) ? entry.Role : null;
+
+    public static ItemDefinition? ItemDef(string id) =>
+        _entries.TryGetValue(id, out var entry) ? entry.Item : null;
 
     public static WaveDefinition? WaveDef(string id) =>
         _entries.TryGetValue(id, out var entry) ? entry.Wave : null;
@@ -275,7 +293,7 @@ internal static class AstraBridge
             progress = false;
             rounds++;
 
-            foreach (var kind in new[] { ContentKind.Team, ContentKind.Wave, ContentKind.Role })
+            foreach (var kind in new[] { ContentKind.Team, ContentKind.Wave, ContentKind.Item, ContentKind.Role })
             {
                 foreach (var entry in _entries.Values.ToArray())
                 {
@@ -398,6 +416,10 @@ internal static class AstraBridge
                 throw new ScriptRuntimeException(
                     $"astra: Id '{id}' 已被模组 {existing.Owner.Mod.Name} 占用（不允许跨模组覆盖）");
 
+            if (existing.Kind != kind)
+                throw new ScriptRuntimeException(
+                    $"astra: Id '{id}' 已被同模组的 {existing.Kind} 占用（同一 Id 不能跨内容类型复用）");
+
             apply(existing);
 
             if (existing.State == ContentState.Orphaned && existing.WasRegistered)
@@ -439,6 +461,7 @@ internal static class AstraBridge
             {
                 ContentKind.Team => entry.Adapter is LuaCustomTeam team && CustomTeamApi.Register(team),
                 ContentKind.Wave => entry.Adapter is LuaCustomWave wave && CustomWaveApi.Register(wave),
+                ContentKind.Item => entry.Adapter is LuaCustomItem item && CustomItemApi.Register(item),
                 ContentKind.Role => entry.Adapter is LuaCustomRole role && CustomRoleApi.Register(role),
                 _ => false,
             };
@@ -525,7 +548,7 @@ internal static class AstraBridge
     }
 
     private static readonly ContentKind[] UnregisterOrder =
-        [ContentKind.Role, ContentKind.Wave, ContentKind.Team];
+        [ContentKind.Role, ContentKind.Item, ContentKind.Wave, ContentKind.Team];
 
     private static IEnumerable<ContentEntry> Ordered()
     {
@@ -550,6 +573,10 @@ internal static class AstraBridge
 
             case ContentKind.Wave:
                 _ = CustomWaveApi.Unregister(entry.Id);
+                break;
+
+            case ContentKind.Item:
+                _ = CustomItemApi.Unregister(entry.Id);
                 break;
 
             case ContentKind.Team:
