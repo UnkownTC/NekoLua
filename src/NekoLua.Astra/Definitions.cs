@@ -304,23 +304,26 @@ internal static class DefinitionParser
         return [.. result];
     }
 
-    private static SpawnPointSpec ParseSpawnPoint(Table t, string ctx, int index)
+    private static SpawnPointSpec ParseSpawnPoint(Table t, string ctx, int index) =>
+        ParsePoint(t, ctx, $"spawn_points[{index}]");
+
+    private static SpawnPointSpec ParsePoint(Table t, string ctx, string prefix)
     {
-        var room = OptionalEnumOrNull<RoomName>(t, "room", ctx, index);
-        var zone = OptionalEnumOrNull<FacilityZone>(t, "zone", ctx, index);
-        var shape = OptionalEnumOrNull<RoomShape>(t, "shape", ctx, index);
-        var local = ReadVector(t, ctx, index);
+        var room = OptionalEnumOrNull<RoomName>(t, "room", ctx, prefix);
+        var zone = OptionalEnumOrNull<FacilityZone>(t, "zone", ctx, prefix);
+        var shape = OptionalEnumOrNull<RoomShape>(t, "shape", ctx, prefix);
+        var local = ReadVector(t, ctx, prefix);
 
         var hasFilter = room.HasValue || zone.HasValue || shape.HasValue;
         var position = hasFilter
             ? PositionEntry.Find(room, zone, shape, local)
             : PositionEntry.Find(local);
 
-        var yaw = OptionalNumber(t, "yaw", ctx, index);
-        var probability = OptionalNumber(t, "probability", ctx, index) ?? 1f;
+        var yaw = OptionalNumber(t, "yaw", ctx, prefix);
+        var probability = OptionalNumber(t, "probability", ctx, prefix) ?? 1f;
 
         if (probability < 0f || probability > 1f)
-            throw LuaSpec.Error(ctx, $"spawn_points[{index}].probability 必须在 0~1 之间");
+            throw LuaSpec.Error(ctx, $"{prefix}.probability 必须在 0~1 之间");
 
         return new SpawnPointSpec
         {
@@ -330,16 +333,20 @@ internal static class DefinitionParser
         };
     }
 
-    private static Vector3 ReadVector(Table t, string ctx, int index)
+    /// <summary>解析单个位置表（与 <c>spawn_points</c> 元素同构，但 probability 被忽略）。</summary>
+    public static SpawnPointSpec ParsePositionSpec(Table t) =>
+        ParsePoint(t, "astra.position", "position");
+
+    private static Vector3 ReadVector(Table t, string ctx, string prefix)
     {
-        var x = OptionalNumber(t, "x", ctx, index);
-        var y = OptionalNumber(t, "y", ctx, index);
-        var z = OptionalNumber(t, "z", ctx, index);
+        var x = OptionalNumber(t, "x", ctx, prefix);
+        var y = OptionalNumber(t, "y", ctx, prefix);
+        var z = OptionalNumber(t, "z", ctx, prefix);
 
         return new Vector3(x ?? 0f, y ?? 0f, z ?? 0f);
     }
 
-    private static float? OptionalNumber(Table t, string key, string ctx, int index)
+    private static float? OptionalNumber(Table t, string key, string ctx, string prefix)
     {
         var value = t.Get(key);
 
@@ -347,17 +354,17 @@ internal static class DefinitionParser
             return null;
 
         if (value.Type != DataType.Number)
-            throw LuaSpec.Error(ctx, $"spawn_points[{index}].{key} 必须是数字");
+            throw LuaSpec.Error(ctx, $"{prefix}.{key} 必须是数字");
 
         var number = (float)value.Number;
 
         if (float.IsNaN(number) || float.IsInfinity(number))
-            throw LuaSpec.Error(ctx, $"spawn_points[{index}].{key} 必须是有限数字");
+            throw LuaSpec.Error(ctx, $"{prefix}.{key} 必须是有限数字");
 
         return number;
     }
 
-    private static TEnum? OptionalEnumOrNull<TEnum>(Table t, string key, string ctx, int index)
+    private static TEnum? OptionalEnumOrNull<TEnum>(Table t, string key, string ctx, string prefix)
         where TEnum : struct, Enum
     {
         var value = t.Get(key);
@@ -366,10 +373,10 @@ internal static class DefinitionParser
             return null;
 
         if (value.Type != DataType.String)
-            throw LuaSpec.Error(ctx, $"spawn_points[{index}].{key} 必须是字符串枚举名");
+            throw LuaSpec.Error(ctx, $"{prefix}.{key} 必须是字符串枚举名");
 
         if (!Enum.TryParse(value.String, true, out TEnum parsed) || !Enum.IsDefined(typeof(TEnum), parsed))
-            throw LuaSpec.Error(ctx, $"spawn_points[{index}].{key} = '{value.String}' 不是合法取值");
+            throw LuaSpec.Error(ctx, $"{prefix}.{key} = '{value.String}' 不是合法取值");
 
         return parsed;
     }

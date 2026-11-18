@@ -131,6 +131,15 @@ kit.command("lua_astra", "Astra 桥接内容与运行时测试", function()
     end)
     trace("after-audio")
 
+    -- 位置解析（世界坐标永远可解析；筛选条目在无匹配房间时返回 nil）
+    local resolved = astra.position.resolve({ x = 1, y = 2, z = 3, yaw = 45 })
+    s:typeIs("position.resolve 返回表", resolved, "table")
+    if resolved ~= nil then
+        s:eq("position.resolve y", resolved.y, 2)
+        s:truthy("position.resolve 保留 yaw", resolved.yaw ~= nil)
+    end
+    trace("after-position")
+
     -- 以下需要在线玩家
     local ply = kit.firstPlayer()
     trace("after-firstPlayer ply=" .. tostring(ply ~= nil))

@@ -2,7 +2,7 @@
 
 - **项目路径**：`src/NekoLua/`
 - **文档版本**：`v6`
-- **最后同步**：2026-11-16 @ Astra 4.0.0 物品刷怪点接入
+- **最后同步**：2026-11-18 @ Astra 4.0 位置/传送接口接入
 - **同步原因**：桥接为 `CustomItem` 增加 `astra.item`（define/give/find/list）并实现 `ISpawnOnRoundStart`，`spawn_points` / `max_spawn_count` 现在覆盖角色、波次与物品
 - **负责人**：WorkBuddy（deepseek-v4.1-flash）
 
@@ -215,6 +215,7 @@ flowchart TD
 | 2026-11-16 | Astra 4.0.0 适配 | 依赖升级 `libs/astra/4.0.0/`；桥接按 4.0.0 编译验证，最低版本 4.0.0 | §4 |
 | 2026-11-16 | 桥接回合开始生成 | 角色/波次实现 `ISpawnOnRoundStart`，新增 `spawn_points` / `max_spawn_count` | §4 |
 | 2026-11-16 | 物品刷怪点接入 | 新增 `astra.item`（define/give/find/list），物品实现 `ISpawnOnRoundStart`；注销顺序 角色→物品→波次→阵营 | §4 |
+| 2026-11-18 | 位置/传送接入 | 新增 `astra.position.teleport(ply, spec)` / `resolve(spec)`，标签 `astra.position`；解析阶段随机选房 | §4 |
 
 ---
 

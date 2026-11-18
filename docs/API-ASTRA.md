@@ -130,7 +130,7 @@ end
 - `flush()` 要求主线程，并受 `astra` 标签门控。
 - 返回值是“当前注册表里已注册的条目总数”（诊断用），不是本次新注册数。
 
-`astra` 下的分组：`team` / `role` / `item` / `wave` / `hint` / `audio` / `countdown` / `effect`。
+`astra` 下的分组：`team` / `role` / `item` / `wave` / `hint` / `audio` / `countdown` / `effect` / `position`。
 
 ### 3.1 门控与主线程
 
@@ -143,8 +143,9 @@ end
 | `astra.role` | `role.define` / `give` / `remove` |
 | `astra.item` | `item.define` / `give` |
 | `astra.wave` | `wave.define` / `spawn` / `scheduler` |
+| `astra.position` | `position.teleport` / `resolve` |
 
-所有写操作、`flush`、`hint`、`audio`、`countdown`、`effect` 都要求主线程；`find` / `get` / `list` 等只读方法不强制校验，但仍建议在主线程使用（返回的是托管对象句柄）。
+所有写操作、`flush`、`hint`、`audio`、`countdown`、`effect`、`position` 都要求主线程；`find` / `get` / `list` 等只读方法不强制校验，但仍建议在主线程使用（返回的是托管对象句柄）。
 
 ---
 
@@ -465,7 +466,44 @@ astra.effect.remove(ply, { { effect = "Bleeding" } })
 
 ---
 
-## 12. 事件 `astraplayer`
+## 12. `astra.position`
+
+Astra 4.0 的位置/传送接口（桥接自 Astra 4.0.0 基线起提供）。
+
+| 方法 | 返回 | 说明 |
+|---|---|---|
+| `astra.position.teleport(ply, position)` | `boolean` | 将玩家传送到位置并设置朝向；玩家不可用或位置无法解析时返回 `false` |
+| `astra.position.resolve(position)` | `table` / `nil` | 解析成世界坐标 `{ x, y, z [, yaw] }`；无法解析返回 `nil` |
+
+`position` 是表：
+
+| 字段 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `x` `y` `z` | `number` | `0` | 坐标；没有 `room`/`zone`/`shape` 时按世界坐标，否则按匹配房间内的本地坐标 |
+| `room` | `string` | — | `RoomName` 枚举名（如 `LczClassDSpawn`） |
+| `zone` | `string` | — | `FacilityZone` 枚举名（`LightContainment` / `HeavyContainment` / `Entrance` / `Surface` / `Other`） |
+| `shape` | `string` | — | `RoomShape` 枚举名（`Endroom` / `Straight` / `Curve` / `TShape` / `XShape`） |
+| `yaw` | `number` | — | 朝向角（度）；省略时传送使用随机水平朝向，`resolve` 结果不带 `yaw` |
+| `probability` | `number` | `1` | 兼容刷怪点字段而接受，单次传送/解析不使用该值 |
+
+- 多个筛选条件可组合；带筛选时，解析阶段在同条件房间中随机选一间，坐标是相对该房间的本地坐标。
+- `teleport` 同时改位置与朝向（等价于 `SpawnPointEntry`）；只想改坐标时目前没有单独接口。
+- `resolve` 在主线程解析并校验字段，失败（例如筛选不到房间、坐标非法）返回 `nil`，字段类型错误则抛 `position.<字段>` 错误。
+
+```lua
+-- 世界坐标
+local p = astra.position.resolve({ x = 1, y = 2, z = 3, yaw = 90 })
+if p then
+    print(p.x, p.y, p.z, p.yaw)
+end
+
+-- 轻收容某房间内、相对房间原点的位置，朝向 0
+astra.position.teleport(ply, { zone = "LightContainment", x = 0, y = 1, z = 2, yaw = 0 })
+```
+
+---
+
+## 13. 事件 `astraplayer`
 
 桥接注册了一个事件类，暴露 Astra 的 `PlayerEvents`：
 
@@ -481,16 +519,16 @@ end)
 
 ---
 
-## 13. 生命周期、热重载与所有权
+## 14. 生命周期、热重载与所有权
 
-### 13.1 Id 所有权
+### 14.1 Id 所有权
 
 - 内容 Id 在整个桥接内**全局唯一**，按大小写不敏感比较；同一 Id 不能跨内容类型复用（如既是角色又是物品）。
 - 同一个 Id 只有最初定义它的 mod 能更新；其它 mod 再定义会抛：
   `astra: Id 'x' 已被模组 y 占用（不允许跨模组覆盖）`。
 - 同一 mod 内重复 `define` = 更新定义对象：适配器实例复用，不重复注册，玩家身上已套用的角色会读取新定义。
 
-### 13.2 热重载
+### 14.2 热重载
 
 `nekolua reload` 会重建 mod 的 Script，并触发 `LuaCleanupRegistry`：
 
@@ -501,7 +539,7 @@ end)
 
 因此 `define` 可以写在 `main.lua` 顶层：重载后同名 Id 会“接管”旧条目，不会因重复注册失败。
 
-### 13.3 插件卸载
+### 14.3 插件卸载
 
 NekoLua 禁用时 `AstraBridge.Unload()`：
 
@@ -513,7 +551,7 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 
 ---
 
-## 14. 错误与排错
+## 15. 错误与排错
 
 | 现象 | 原因 / 处理 |
 |---|---|
@@ -521,7 +559,7 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 | `需要 AstraFramework >= 4.0.0，当前: x.y.z` | 升级 Astra；桥接按 4.0.0 签名编译 |
 | `Id 'x' 已被模组 y 占用` | 跨 mod Id 冲突；换 Id，或让原 mod 停止定义 |
 | `Id 'x' 已被同模组的 X 占用` | 同 mod 把同一个 Id 用在了不同内容类型（角色/物品/波次/阵营）；改用不同 Id |
-| `必须在主线程调用（当前为后台线程）` | 写操作/hint/audio/countdown/effect 只能在主线程执行 |
+| `必须在主线程调用（当前为后台线程）` | 写操作/hint/audio/countdown/effect/position 只能在主线程执行 |
 | `该全服级 API 已被服务器禁用（Config.DeniedGlobalApis 含 '标签'）` | 运营者在 `DeniedGlobalApis` 里关闭了对应标签 |
 | 提示无法清除 | `clear` 用了错误 id；保存 `show` 的返回值 |
 | `on_removed` 不触发 | Astra < 3.3.1 的 `RemoveRole` 守卫写反；升级到 4.0.0（3.3.1 修复该守卫，当前桥接下限 4.0.0） |
@@ -531,7 +569,7 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 
 ---
 
-## 15. 版本历史
+## 16. 版本历史
 
 | 桥接基线 | 关键变化 |
 |---|---|
@@ -539,16 +577,16 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 | Astra 3.0.1 | Entry 模型适配：`ItemEntry` / `TeamRef` / `RoleEntry`，支持自定义物品与混编阵营 |
 | Astra 3.2.0 | 波次加权：`weight` / `min_players` / `max_players`、`astra.wave.scheduler()` |
 | Astra 3.3.1 | 修复 `CustomRole.RemoveRole` 守卫，`on_removed` 与角色清理生效 |
-| Astra 4.0.0 | 编译基线升至 4.0.0；桥接角色/波次/物品实现 `ISpawnOnRoundStart`，新增 `spawn_points` / `max_spawn_count` 与 `astra.item`（define/give/find/list）；当前最低版本 |
+| Astra 4.0.0 | 编译基线升至 4.0.0；桥接角色/波次/物品实现 `ISpawnOnRoundStart`，新增 `spawn_points` / `max_spawn_count`、`astra.item`（define/give/find/list）与 `astra.position`（teleport/resolve）；当前最低版本 |
 
 ---
 
-## 16. 已知限制
+## 17. 已知限制
 
-- 只覆盖 Astra 的团队/角色/物品/波次 + hint/audio/countdown/effect；**没有** ability、patch 接口，也没有物品事件回调（`OnShooting` 等）的 Lua 桥接。
+- 只覆盖 Astra 的团队/角色/物品/波次 + hint/audio/countdown/effect/position；**没有** ability、patch 接口，也没有物品事件回调（`OnShooting` 等）的 Lua 桥接。
 - 定义字段是白名单：不接受程序集名、类型名或任意反射入口。
 - 角色/阵营/波次句柄的可写属性 setter 是空实现，不会回写定义；更新一律走 `define`。
 - `wave.table` 中尚未注册的自定义角色 Id 会先登记，等 Astra 刷新解析；解析失败时该条目不会生成。
 - 桥接编译期绑定 Astra 4.0.0 签名；升级 Astra 需要同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与适配器代码。
 - 回合开始生成覆盖角色、波次与物品；物品只生成 `base_item` 拾取物，不附带自定义物品事件，且同一 `base_item` 只映射一个自定义物品定义。
-- 刷怪点没有运行时查询接口（定义只写不读）；需要确认定义是否生效时，用 `astra.role.find` / `astra.item.find` / `astra.wave.find` 检查 Id，或观察回合开始日志。
+- 刷怪点列表本身没有运行时查询接口（`spawn_points` 只写不读）；`astra.position.resolve` 可以解析单个坐标定义，但拿不到某个波次/物品的刷怪点列表。需要确认定义是否生效时，用 `astra.role.find` / `astra.item.find` / `astra.wave.find` 检查 Id，或观察回合开始日志。

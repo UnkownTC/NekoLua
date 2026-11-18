@@ -119,7 +119,7 @@ public class Config
     [Description("禁止 Lua 脚本调用的全服级 API 标签（空 = 不限制）。" +
                  "可用标签：warhead / round / server / whitelist / reservedSlots / permissions / " +
                  "broadcast / cassie / decontamination / map / hazard / pocket / scp914；" +
-                 "扩展程序集可登记额外标签（如 astra / astra.role / astra.team / astra.wave）")]
+                 "扩展程序集可登记额外标签（如 astra / astra.role / astra.item / astra.team / astra.wave / astra.position）")]
     public string[] DeniedGlobalApis { get; set; } = [];
     private static string[] BuildDefaultBlockedPaths()
     {

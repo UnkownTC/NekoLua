@@ -97,6 +97,18 @@ kit.command("lua_err", "Astra 桥接负向测试", function()
         astra.item.define({ id = "kit_cross_id", name = "x", base_item = "Coin" })
     end, "同模组的")
 
+    s:throws("position.resolve 坏 x", function()
+        astra.position.resolve({ x = "not_a_number" })
+    end, "position.x")
+
+    s:throws("position.resolve 坏房间名", function()
+        astra.position.resolve({ room = "NotARoom" })
+    end, "position.room")
+
+    s:throws("position.teleport 无玩家", function()
+        astra.position.teleport(nil, { x = 0, y = 0, z = 0 })
+    end, "astra.position.teleport")
+
     s:throws("role.give 无玩家", function()
         astra.role.give(nil, "kit_err_role")
     end, "astra.role.give")

@@ -4,6 +4,7 @@ using Astra.Effects;
 using Astra.Enums;
 using Astra.Hints;
 using Astra.Items;
+using Astra.Positions;
 using Astra.Roles;
 using Astra.Teams;
 using Astra.Waves;
@@ -32,6 +33,7 @@ namespace NekoLua.AstraBridge;
 ///   astra.audio.play/stop
 ///   astra.countdown.start/cancel
 ///   astra.effect.apply/remove
+///   astra.position.teleport/resolve
 /// </summary>
 public sealed class AstraRegister : IRegisterLua
 {
@@ -61,6 +63,7 @@ public sealed class AstraRegister : IRegisterLua
             ["audio"] = BuildAudio(script),
             ["countdown"] = BuildCountdown(script),
             ["effect"] = BuildEffect(script),
+            ["position"] = BuildPosition(script),
         };
 
         return table;
@@ -597,6 +600,52 @@ public sealed class AstraRegister : IRegisterLua
                 CustomEffectApi.Remove(LuaArgs.ResolvePlayer(args, 0, api), ParseEffects(args, 1, api));
                 return DynValue.Nil;
             });
+        });
+
+        return t;
+    }
+
+    private static Table BuildPosition(Script script)
+    {
+        var t = new Table(script);
+
+        t["teleport"] = DynValue.NewCallback((_, args) =>
+        {
+            const string api = "astra.position.teleport(ply, position)";
+            EnsureAvailable(api);
+            EnsureMainThread(api);
+            Guard("astra.position", api);
+
+            var player = LuaArgs.ResolvePlayer(args, 0, api);
+            var spec = DefinitionParser.ParsePositionSpec(RequireTable(args, 1, api));
+            var point = new SpawnPointEntry(spec.Position, spec.Rotation);
+
+            return DynValue.NewBoolean(point.Teleport(player));
+        });
+
+        t["resolve"] = DynValue.NewCallback((_, args) =>
+        {
+            const string api = "astra.position.resolve(position)";
+            EnsureAvailable(api);
+            EnsureMainThread(api);
+            Guard("astra.position", api);
+
+            var spec = DefinitionParser.ParsePositionSpec(RequireTable(args, 0, api));
+
+            if (!spec.Position.TryGetWorldPosition(out var world))
+                return DynValue.Nil;
+
+            var result = new Table(script)
+            {
+                ["x"] = DynValue.NewNumber(world.x),
+                ["y"] = DynValue.NewNumber(world.y),
+                ["z"] = DynValue.NewNumber(world.z),
+            };
+
+            if (spec.Rotation is { } rotation)
+                result["yaw"] = DynValue.NewNumber(rotation.eulerAngles.y);
+
+            return DynValue.NewTable(result);
         });
 
         return t;
