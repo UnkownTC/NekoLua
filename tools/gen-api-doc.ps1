@@ -76,7 +76,7 @@ function Add([string] $text) { [void] $sb.AppendLine($text) }
 # ---------- 头部 ----------
 Add '# NekoLua Lua API 参考'
 Add ''
-Add '> 适用版本：以仓库当前 `main` 为准；Astra 桥接基线 AstraFramework **6.1.0**，Lua 运行时 MoonSharp **2.0.0**。'
+Add '> 适用版本：以仓库当前 `main` 为准；Astra 桥接基线 AstraFramework **7.0.0**，Lua 运行时 MoonSharp **2.0.0**。'
 Add '> 本文只描述脚本可见面（Lua 全局表、对象成员与门控），C# 扩展契约见文末。'
 Add '> 相关文档：[README](../README.md) · [运行流程](../src/NekoLua/FLOW.md) · [C# 扩展](EXTENSIONS.md) · [Astra 桥接设计](ASTRA-EXTENSION.md) · [Astra 桥接 API](API-ASTRA.md)'
 Add ''

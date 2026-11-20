@@ -11,7 +11,7 @@
 | 40 | `40_core_api` | base64 / csv / regex / crypto / buffer / meta / encoding / bit / random / datetime / version / uuid / vector3 / mathx / template / try / pool | `lua_core` |
 | 50 | `50_hotreload` | `nekolua reload` 后的 timer / eventhook / eventbus / Astra 内容回收 | `lua_hr` |
 
-Astra 相关插件需要：`NekoLua.Astra.dll` 在 `NekoLua/extensions/`，AstraFramework >= 6.1.0（低于此版本桥接会直接 `astra.available=false`）。
+Astra 相关插件需要：`NekoLua.Astra.dll` 在 `NekoLua/extensions/`，AstraFramework >= 7.0.0（低于此版本桥接会直接 `astra.available=false`）。
 
 ---
 

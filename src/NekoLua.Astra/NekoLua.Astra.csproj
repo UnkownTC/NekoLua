@@ -16,9 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Astra 6.1.0 只读依赖：Entry 化 + 加权波次 + 角色移除清理 + 回合开始生成（ISpawnDefinition / ISpawnCondition） -->
+    <!-- Astra 7.0.0 只读依赖：Entry 化 + 加权波次 + 角色移除清理 + 回合开始生成（ISpawnOnRoundStart / ISpawnDefinition / ISpawnCondition） -->
     <Reference Include="Astra.Framework">
-      <HintPath>$(LibsRoot)astra\6.1.0\Astra.Framework.dll</HintPath>
+      <HintPath>$(LibsRoot)astra\7.0.0\Astra.Framework.dll</HintPath>
       <Private>false</Private>
     </Reference>
 

@@ -49,7 +49,7 @@ internal sealed class LuaCustomTeam : CustomTeam
 }
 
 /// <summary>Lua 定义的物品适配器：承载原版物品类型，并参与回合开始刷怪点生成。</summary>
-internal sealed class LuaCustomItem : CustomItem, ISpawnDefinition, ISpawnCondition
+internal sealed class LuaCustomItem : CustomItem, ISpawnOnRoundStart, ISpawnCondition
 {
     private readonly string _id;
     private readonly ItemDefinition _fallback;
@@ -85,7 +85,7 @@ internal sealed class LuaCustomItem : CustomItem, ISpawnDefinition, ISpawnCondit
 /// Lua 定义的角色适配器。模板实例与玩家实例都只持有 Id，
 /// 每次读取定义时取「当前版本」，实现长生命周期模板 + 可替换定义。
 /// </summary>
-internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider, ISpawnDefinition, ISpawnCondition
+internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider, ISpawnOnRoundStart, ISpawnCondition
 {
     private readonly string _id;
     private readonly RoleDefinition _fallback;
@@ -203,7 +203,7 @@ internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider, ISpaw
 }
 
 /// <summary>Lua 定义的波次适配器（3.1+ 同时实现加权波次契约）。</summary>
-internal sealed class LuaCustomWave : CustomWave, IWeightedWave, ISpawnDefinition, ISpawnCondition
+internal sealed class LuaCustomWave : CustomWave, IWeightedWave, ISpawnOnRoundStart, ISpawnCondition
 {
     private readonly string _id;
     private readonly WaveDefinition _fallback;

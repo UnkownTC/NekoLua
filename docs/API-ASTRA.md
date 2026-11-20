@@ -1,6 +1,6 @@
 # NekoLua × AstraFramework 桥接 API
 
-> 适用版本：AstraFramework **>= 6.1.0**，NekoLua 核心以仓库当前 `main` 为准。
+> 适用版本：AstraFramework **>= 7.0.0**，NekoLua 核心以仓库当前 `main` 为准。
 > 桥接产物：`artifacts/build/NekoLua.Astra/x64/Release/net481/NekoLua.Astra.dll`，部署到 `SecretLab/NekoLua/extensions/`。
 > 相关文档：[NekoLua API 参考](API.md) · [桥接设计（时序与决策）](ASTRA-EXTENSION.md) · [扩展开发](EXTENSIONS.md)
 
@@ -14,7 +14,7 @@
 |---|---|
 | 运行环境 | 已加载 AstraFramework 插件（`Astra.Framework.dll` 由 Astra 自己发布） |
 | 桥接位置 | `SecretLab/NekoLua/extensions/NekoLua.Astra.dll`，**不要**放 `plugins/` |
-| 编译依赖 | `NekoLua.dll` + `Astra.Framework.dll`（`libs/astra/6.1.0/`）+ LabAPI / 游戏程序集 |
+| 编译依赖 | `NekoLua.dll` + `Astra.Framework.dll`（`libs/astra/7.0.0/`）+ LabAPI / 游戏程序集 |
 | 生效方式 | 覆盖 DLL 后重启服务端，或重新启用 NekoLua 插件 |
 
 桥接是普通类库，不是 LabAPI 插件：Astra 的 `AutoRegister` 会扫描所有插件程序集，若桥接被当成插件，适配器类型会被误注册成模板。装载走 NekoLua 的 `extensions/` 扩展点（`Assembly.Load(byte[])`），详见 [EXTENSIONS.md](EXTENSIONS.md)。
@@ -28,9 +28,9 @@ if not astra.available then
 end
 ```
 
-- `astra.available`：`Astra.Framework` 程序集版本是否 `>= 6.1.0`。
+- `astra.available`：`Astra.Framework` 程序集版本是否 `>= 7.0.0`。
 - `astra.version`：检测到的 Astra 版本字符串；读不到时为 `"unknown"`。
-- 不可用时 `astra` 表仍然存在（脚本可以安全探测），但所有方法调用都会抛“需要 AstraFramework >= 6.1.0”。
+- 不可用时 `astra` 表仍然存在（脚本可以安全探测），但所有方法调用都会抛“需要 AstraFramework >= 7.0.0”。
 - 不可用时桥接也**不会**注册 `astraplayer` 事件类与波次角色生成器。
 
 ### 1.3 装载时序
@@ -231,7 +231,7 @@ print(team.vanillaTeam)     -- 成员名大小写不敏感
 | `on_added` | `function` | `nil` | 角色添加回调 `function(ply)` |
 | `on_removed` | `function` | `nil` | 角色移除回调 `function(ply)` |
 
-`wave_count` 为 `0` 或小于 `-1` 会整条拒绝。`on_removed` 依赖 Astra 3.3.1 修复的移除守卫（当前桥接下限 6.1.0 已包含）。
+`wave_count` 为 `0` 或小于 `-1` 会整条拒绝。`on_removed` 依赖 Astra 3.3.1 修复的移除守卫（当前桥接下限 7.0.0 已包含）。
 
 ### 5.3 角色句柄
 
@@ -282,9 +282,9 @@ print(role.waveSpawnCount)
 
 `find` / `list` 返回托管对象句柄，常用成员：`id`、`name`、`baseItem`、`description`、`weight`。
 
-### 6.4 回合开始生成（Astra 6.1+）
+### 6.4 回合开始生成（Astra 7.0+）
 
-角色、波次和物品都可以声明 `spawn_points`，由 Astra 的 `RoundStartSpawnManager` 在原版角色分配完成后生成：`role` 直接替换候选玩家，`wave` 按 `table` 的角色与数量依次替换，`item` 在每个选中的点生成一个 `base_item` 拾取物。桥接适配器实现了 `ISpawnDefinition` 与 `ISpawnCondition`，定义注册后自动参与，不需要额外调用：
+角色、波次和物品都可以声明 `spawn_points`，由 Astra 的 `RoundStartSpawnManager` 在原版角色分配完成后生成：`role` 直接替换候选玩家，`wave` 按 `table` 的角色与数量依次替换，`item` 在每个选中的点生成一个 `base_item` 拾取物。桥接适配器实现了 `ISpawnOnRoundStart`（它继承 `ISpawnDefinition`）与 `ISpawnCondition`，定义注册后自动参与，不需要额外调用：`ISpawnDefinition` 只承载 `CustomSpawnPoints`，`ISpawnOnRoundStart` 再提供 `MinAmount` / `MaxSpawnCount`。
 
 - `MinAmount` ← `min_amount`
 - `MaxSpawnCount` ← `max_spawn_count`
@@ -319,6 +319,7 @@ astra.item.define {
 
 - 筛选条件可组合，未给出的条件视为不限；解析时在匹配房间中随机选房，因此同一筛选点的实际位置可能每回合不同。
 - `min_amount`：最少生成数，`0` 表示不设下限；概率选中的点不足时，从有效但未命中的点补足，最终仍受 `max_spawn_count`、刷怪点数量与可用玩家数限制。
+- 只有实现 `ISpawnOnRoundStart` 的内容会参与自动生成；上游 `StandardRole` 只实现 `ISpawnDefinition`，因此标准角色不会自动生成。Lua 侧 `astra.role/item/wave.define` 的适配器都实现了 `ISpawnOnRoundStart`，无需额外声明。
 - `max_spawn_count`：角色/波次是最多替换的玩家数，物品是最多生成的拾取物数量；省略时等于刷怪点数量，`0` 表示不在回合开始生成，`-1` 会被拒绝。每局每个点最多使用一次。
 - `can_spawn`：只影响回合开始的自动生成；返回 `false` 时整个定义本轮跳过，手动 `astra.wave.spawn` 不受影响。
 - `spawn_points` 可以为空：角色/波次仍会生成，只是不做传送；物品必须有至少一个有效刷怪点，否则只记警告、不生成。
@@ -573,14 +574,14 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| `astra.available == false` | Astra 版本低于 6.1.0，或 `Astra.Framework.dll` 未加载；看控制台 `[NekoLua.Astra]` 日志 |
-| `需要 AstraFramework >= 6.1.0，当前: x.y.z` | 升级 Astra；桥接按 6.1.0 签名编译 |
+| `astra.available == false` | Astra 版本低于 7.0.0，或 `Astra.Framework.dll` 未加载；看控制台 `[NekoLua.Astra]` 日志 |
+| `需要 AstraFramework >= 7.0.0，当前: x.y.z` | 升级 Astra；桥接按 7.0.0 签名编译 |
 | `Id 'x' 已被模组 y 占用` | 跨 mod Id 冲突；换 Id，或让原 mod 停止定义 |
 | `Id 'x' 已被同模组的 X 占用` | 同 mod 把同一个 Id 用在了不同内容类型（角色/物品/波次/阵营）；改用不同 Id |
 | `必须在主线程调用（当前为后台线程）` | 写操作/hint/audio/countdown/effect/position 只能在主线程执行 |
 | `该全服级 API 已被服务器禁用（Config.DeniedGlobalApis 含 '标签'）` | 运营者在 `DeniedGlobalApis` 里关闭了对应标签 |
 | 提示无法清除 | `clear` 用了错误 id；保存 `show` 的返回值 |
-| `on_removed` 不触发 | Astra < 3.3.1 的 `RemoveRole` 守卫写反；升级到 6.1.0（当前桥接下限已包含该修复） |
+| `on_removed` 不触发 | Astra < 3.3.1 的 `RemoveRole` 守卫写反；升级到 7.0.0（当前桥接下限已包含该修复） |
 | 注册失败但无异常 | 看 `[NekoLua.Astra] ... 暂未注册成功` 警告；`astra.flush()` 会重试，最多 5 帧 |
 
 桥接把 Astra/第三方抛出的 .NET 异常统一转成 Lua `ScriptRuntimeException`；Astra 回调内部抛出的异常只记录日志并返回 `nil` / `false`，不会中断波次或角色流程。
@@ -598,7 +599,8 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 | Astra 4.0.0 | 编译基线升至 4.0.0；桥接角色/波次/物品实现 `ISpawnOnRoundStart`，新增 `spawn_points` / `max_spawn_count`、`astra.item`（define/give/find/list）与 `astra.position`（teleport/resolve） |
 | Astra 5.0.0 | 上游 `ISpawnOnRoundStart` → `ISpawnable`，新增 `MinAmount` |
 | Astra 6.0.0 | 上游改为 `ISpawnDefinition`（`SpawnPoints` → `CustomSpawnPoints`），移除显式 opt-in；桥接跟进实现新接口 |
-| Astra 6.1.0 | 上游新增 `ISpawnCondition`；桥接适配器实现 `ISpawnDefinition, ISpawnCondition`，新增 `min_amount` / `can_spawn`；当前最低版本 |
+| Astra 6.1.0 | 上游新增 `ISpawnCondition`；桥接适配器实现 `ISpawnDefinition, ISpawnCondition`，新增 `min_amount` / `can_spawn` |
+| Astra 7.0.0 | 上游拆分契约：`ISpawnOnRoundStart` 继承 `ISpawnDefinition` 并承载 `MinAmount` / `MaxSpawnCount`；`StandardRole` 不再参与自动生成；桥接适配器改为实现 `ISpawnOnRoundStart` + `ISpawnCondition`；当前最低版本 |
 
 ---
 
@@ -608,6 +610,6 @@ NekoLua 禁用时 `AstraBridge.Unload()`：
 - 定义字段是白名单：不接受程序集名、类型名或任意反射入口。
 - 角色/阵营/波次句柄的可写属性 setter 是空实现，不会回写定义；更新一律走 `define`。
 - `wave.table` 中尚未注册的自定义角色 Id 会先登记，等 Astra 刷新解析；解析失败时该条目不会生成。
-- 桥接编译期绑定 Astra 6.1.0 签名；升级 Astra 需要同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与适配器代码。
+- 桥接编译期绑定 Astra 7.0.0 签名；升级 Astra 需要同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与适配器代码。
 - 回合开始生成覆盖角色、波次与物品；物品只生成 `base_item` 拾取物，不附带自定义物品事件，且同一 `base_item` 只映射一个自定义物品定义。
 - 刷怪点列表本身没有运行时查询接口（`spawn_points` 只写不读）；`astra.position.resolve` 可以解析单个坐标定义，但拿不到某个波次/物品的刷怪点列表。需要确认定义是否生效时，用 `astra.role.find` / `astra.item.find` / `astra.wave.find` 检查 Id，或观察回合开始日志。

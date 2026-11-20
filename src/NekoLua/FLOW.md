@@ -2,8 +2,8 @@
 
 - **项目路径**：`src/NekoLua/`
 - **文档版本**：`v6`
-- **最后同步**：2026-11-21 @ Astra 6.1.0 回合开始生成接口衔接
-- **同步原因**：桥接适配器由 `ISpawnOnRoundStart` 迁移到 `ISpawnDefinition` + `ISpawnCondition`，角色/波次/物品的定义新增 `min_amount` / `can_spawn`；`spawn_points` / `max_spawn_count` 语义不变
+- **最后同步**：2026-11-21 @ Astra 7.0.0 生成契约拆分
+- **同步原因**：桥接适配器改为实现 `ISpawnOnRoundStart`（继承 `ISpawnDefinition`）+ `ISpawnCondition`；`min_amount` / `can_spawn` 与 `spawn_points` / `max_spawn_count` 语义不变
 - **负责人**：WorkBuddy（deepseek-v4.1-flash）
 
 ---
@@ -192,7 +192,7 @@ flowchart TD
 | Newtonsoft.Json 13.0.4 | 引用（NuGet） | `LuaJson`、`LuaObjectProxy` | JSON 表不可用 | — |
 | NVorbis 0.10.5 | 引用（NuGet） | `Proxies/SubLibs/LuaNvorbisProxy` | `nvorbis` 表不可用 | `Config.EnableNvorbis = false` 可关闭 |
 | `System.Net.Http` 4.3.4 | 引用（NuGet） | `Proxies/Net/LuaHttpProxy` | `http` 表不可用 | — |
-| AstraFramework（可选，仅 `NekoLua.Astra`） | 引用（编译期，`libs/astra/6.1.0/`） | `src/NekoLua.Astra/*` | 桥接 DLL 不加载 / `astra.available=false` | 核心不引用；扩展目录扫描失败只记日志 |
+| AstraFramework（可选，仅 `NekoLua.Astra`） | 引用（编译期，`libs/astra/7.0.0/`） | `src/NekoLua.Astra/*` | 桥接 DLL 不加载 / `astra.available=false` | 核心不引用；扩展目录扫描失败只记日志 |
 | 文件系统（`SecretLab/NekoLua`） | 双向（读写） | `LuaPaths`、`LuaEmbeddedExtractor`、`file`/`directory` 表 | 目录不可写则插件加载失败；运行期读写失败由脚本处理 | `LuaPathGuard` 双层（`BlockedPaths` 硬拒绝 + `AllowedPaths` 放行），默认只能访问自身 mod 目录；`ExtractEmbeddedLua=false` 跳过解压 |
 | 网络（HTTP/TCP/UDP/WS/FTP） | 出向 | `Proxies/Net/*` | 连接失败由脚本处理 | `EnableNetwork` / `EnableFtp` 总开关；`MaxConnectionsPerMod` 限流；`BlockPrivateNetworkTargets` 阻断私网/环回/云元数据 |
 | 操作系统进程与原生调用 | 出向（默认关） | `Proxies/Interop/*`、`LuaProcessProxy` | 主机被脚本控制 | `EnableProcess=false`、`EnableWin32=false` 默认关闭；`Win32FunctionBlacklist`（进程创建/内存读写/模块加载）硬拒绝、`Win32AllowPointerArgs=false`；`ProcessWhitelist` 支持全路径强模式 |
@@ -217,6 +217,7 @@ flowchart TD
 | 2026-11-16 | 物品刷怪点接入 | 新增 `astra.item`（define/give/find/list），物品实现 `ISpawnOnRoundStart`；注销顺序 角色→物品→波次→阵营 | §4 |
 | 2026-11-18 | 位置/传送接入 | 新增 `astra.position.teleport(ply, spec)` / `resolve(spec)`，标签 `astra.position`；解析阶段随机选房 | §4 |
 | 2026-11-21 | Astra 6.1.0 适配 | 依赖升级 `libs/astra/6.1.0/`；适配器实现 `ISpawnDefinition` + `ISpawnCondition`，定义新增 `min_amount` / `can_spawn`；最低版本 6.1.0 | §4 |
+| 2026-11-21 | Astra 7.0.0 适配 | 依赖升级 `libs/astra/7.0.0/`；适配器改为 `ISpawnOnRoundStart` + `ISpawnCondition`；最低版本 7.0.0 | §4 |
 
 ---
 

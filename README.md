@@ -17,7 +17,7 @@ NekoLua 是 **SCP: Secret Laboratory** 服务端 Lua 脚本插件，基于
   的 CustomTeam / CustomRole / CustomItem / CustomWave、回合开始刷怪点、位置传送、
   Hint / 音频 / 倒计时 / 特效与波次调度器暴露给 Lua。
 
-> 当前文档与二进制基线：Lua 运行时 **MoonSharp 2.0.0**，可选桥接 **AstraFramework 6.1.0**。
+> 当前文档与二进制基线：Lua 运行时 **MoonSharp 2.0.0**，可选桥接 **AstraFramework 7.0.0**。
 
 ## 环境要求
 
@@ -25,7 +25,7 @@ NekoLua 是 **SCP: Secret Laboratory** 服务端 Lua 脚本插件，基于
 |---|---|
 | 服务端 | SCP: Secret Laboratory Dedicated Server，自带 LabAPI |
 | 运行时 | .NET Framework 4.8.1（`net481`） |
-| 可选桥接 | AstraFramework **>= 6.1.0** 已作为 LabAPI 插件安装 |
+| 可选桥接 | AstraFramework **>= 7.0.0** 已作为 LabAPI 插件安装 |
 | 开发构建 | .NET SDK + Python 3（`tools/vsbuild.py`，`dotnet build` 会报 MSB4803） |
 
 ## 安装
@@ -53,7 +53,7 @@ SecretLab/NekoLua/
 
 ### 2. 安装 Astra 扩展（可选）
 
-需要先安装 **AstraFramework >= 6.1.0**（它本身是 LabAPI 插件），然后把
+需要先安装 **AstraFramework >= 7.0.0**（它本身是 LabAPI 插件），然后把
 `NekoLua.Astra.dll` 放到：
 
 ```text
@@ -67,8 +67,8 @@ SecretLab/NekoLua/extensions/NekoLua.Astra.dll
 - 扩展 DLL 用字节方式装载，运行期可以覆盖文件，但**新代码需要重启服务器**（或重新启用
   NekoLua 插件）才生效。
 - 扩展不能依赖 `extensions/` 里的其它 DLL；依赖应放进 `LabAPI/plugins/` 或合并进同一个 DLL。
-- 若 Astra 版本低于 6.1.0，`astra.available` 为 `false`，`astra` 表仍存在，但调用会报
-  `需要 AstraFramework >= 6.1.0`。
+- 若 Astra 版本低于 7.0.0，`astra.available` 为 `false`，`astra` 表仍存在，但调用会报
+  `需要 AstraFramework >= 7.0.0`。
 
 ### 3. 写第一个 mod
 
@@ -134,7 +134,7 @@ print(astra.available, astra.version, #astra.role.list())
 dotnet restore src/NekoLua/NekoLua.csproj
 python tools/vsbuild.py src/NekoLua/NekoLua.csproj -p:Configuration=Release -p:Platform=x64
 
-# 可选 Astra 桥接（需 AstraFramework 6.1.0 的只读 DLL 位于 libs/astra/6.1.0/）
+# 可选 Astra 桥接（需 AstraFramework 7.0.0 的只读 DLL 位于 libs/astra/7.0.0/）
 dotnet restore src/NekoLua.Astra/NekoLua.Astra.csproj
 python tools/vsbuild.py src/NekoLua.Astra/NekoLua.Astra.csproj -p:Configuration=Release -p:Platform=x64
 ```
@@ -179,7 +179,7 @@ powershell -File tests/lua/install.ps1 -NekoLuaRoot "<...>\SecretLab\NekoLua"
 ```
 
 随后在控制台执行 `lua_rt`、`lua_astra`、`lua_sched`、`lua_core`、`lua_hr`、`lua_err`。
-Astra 套件需要 `NekoLua.Astra.dll` 位于 `extensions/` 且 AstraFramework >= 6.1.0。
+Astra 套件需要 `NekoLua.Astra.dll` 位于 `extensions/` 且 AstraFramework >= 7.0.0。
 
 ## 仓库结构
 

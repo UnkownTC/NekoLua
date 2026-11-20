@@ -1,7 +1,7 @@
 # NekoLua × AstraFramework 扩展方案（v1 已实现）
 
-> 状态：**v1.3 已实现**（核心 `0a00d81`，桥接 `31c72ec`；已适配 Astra 6.1.0）。2026-11-21。
-> 基线：NekoLua `2.1.0`（本仓库）/ AstraFramework `6.1.0`。
+> 状态：**v1.3 已实现**（核心 `0a00d81`，桥接 `31c72ec`；已适配 Astra 7.0.0）。2026-11-21。
+> 基线：NekoLua `2.2.0`（本仓库）/ AstraFramework `7.0.0`。
 > 一句话：Lua 通过 `astra.*` 声明 `CustomTeam` / `CustomRole` / `CustomWave` 并操作它们；桥接是独立 `NekoLua.Astra.dll`，放 `NekoLua/extensions/`，核心不引用 Astra。
 > Lua 侧参考手册见 [API-ASTRA.md](API-ASTRA.md)；NekoLua 核心 API 见 [API.md](API.md)。
 
@@ -18,17 +18,18 @@
 | Astra 3.3.1 修复：`CustomRole.RemoveRole` 守卫写反（`if (Check(player)) return;`），所有移除路径都不触发 `OnRemoved` 与属性回收；桥接最低版本提升到 3.3.1 | 已完成（Astra `41ebe5b`） |
 | Astra 4.0.0 适配：编译依赖升级 `libs/astra/4.0.0/`；桥接为角色/波次/物品实现 `ISpawnOnRoundStart`（`spawn_points` / `max_spawn_count`），新增 `astra.item`（define/give/find/list）与 `astra.position`（teleport/resolve），team/role/wave 原有字段不变 | 已完成 |
 | Astra 5.0/6.0 适配：上游 `ISpawnOnRoundStart` → `ISpawnable` → `ISpawnDefinition`，`SpawnPoints` 改名 `CustomSpawnPoints` 并移除显式 opt-in；桥接适配器跟进实现 `ISpawnDefinition` | 已完成 |
-| Astra 6.1.0 适配：上游新增 `ISpawnCondition`；桥接实现 `ISpawnDefinition, ISpawnCondition`，角色/波次/物品新增 `min_amount` / `can_spawn`；最低版本升至 6.1.0 | 已完成 |
+| Astra 6.1.0 适配：上游新增 `ISpawnCondition`；桥接实现 `ISpawnDefinition, ISpawnCondition`，角色/波次/物品新增 `min_amount` / `can_spawn` | 已完成 |
+| Astra 7.0.0 适配：上游把 `MinAmount` / `MaxSpawnCount` 拆到 `ISpawnOnRoundStart : ISpawnDefinition`；桥接适配器改为实现 `ISpawnOnRoundStart` + `ISpawnCondition`，最低版本升至 7.0.0 | 已完成 |
 | `astra.ability`（v2）、`astra.effect.define`（v2）、`astra.patch`（不做）、物品事件（`OnShooting` 等） | 未实现 |
 | 实机冒烟（游戏内加载示例 mod） | 待服务端验证 |
 
 与设计稿的差异：
 
-1. Astra 实际从 **2.2.1** 起步（设计稿写 2.2.0）：额外提供 `IWaveSpawnCountProvider`（按波次数量）与 `[DisableAutoRegister]` 内容豁免；当前基线已到 **6.1.0**（见状态表）。
+1. Astra 实际从 **2.2.1** 起步（设计稿写 2.2.0）：额外提供 `IWaveSpawnCountProvider`（按波次数量）与 `[DisableAutoRegister]` 内容豁免；当前基线已到 **7.0.0**（见状态表）。
 2. Astra 不可用时**不是没有 `astra` 表**，而是 `astra.available = false`、调用抛明确错误（扩展装载器仍然实例化了表提供者）。
 3. `astra.role.define` 的定义回调 v1 只支持 `on_added` / `on_removed`；其它事件用 `eventhook.bind("astraplayer", "Shooting", ...)` 或 LabAPI 事件。
 4. 波次刷新数量：`wave_count` 为统一数量；需要按波次不同数量时用 `wave_counts = { ["waveId"] = n }`。
-5. **Astra 3.0 是 BREAKING**：桥接已跟进 Entry 化；Lua 侧语义不变，只是 `items` 现在也能写自定义物品 Id、`teams` / 波次 `table` 也能写原版阵营 / 原版角色名。低于 6.1.0 的 Astra 会直接 `astra.available=false`。
+5. **Astra 3.0 是 BREAKING**：桥接已跟进 Entry 化；Lua 侧语义不变，只是 `items` 现在也能写自定义物品 Id、`teams` / 波次 `table` 也能写原版阵营 / 原版角色名。低于 7.0.0 的 Astra 会直接 `astra.available=false`。
 6. **Astra 3.1/3.2 是增量能力**：`astra.wave.define` 增加了 `weight` / `min_players` / `max_players`，Lua 定义的波次实现了 `IWeightedWave`，可交给 `WaveScheduler.Load/Advance` 或 `SupportWavePool.Register/Pick` 使用；桥接本身不替脚本调度波次。
 
 ---
@@ -285,7 +286,7 @@ eventhook.bind("astraplayer", "Shooting", "no_friendly_fire", function(ev) ... e
 
 | 项 | 值 |
 |---|---|
-| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/6.1.0/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
+| 引用 | `NekoLua.dll`（扩展契约）、`Astra.Framework.dll`（`libs/astra/7.0.0/`）、LabAPI + 游戏程序集（与 NekoLua 同版本） |
 | 目标框架 | `net481`，`PlatformTarget=x64` |
 | 构建 | 复用 `tools/vsbuild.py` 形态，独立 csproj |
 | 部署 | 只放 `NekoLua/extensions/`；**不要**放 `plugins/`（见 A1/A2） |
@@ -422,8 +423,8 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 
 | 场景 | 行为 |
 |---|---|
-| Astra 程序集不存在 | `astra` 表存在但 `available=false`；调用报「需要 AstraFramework >= 6.1.0」，并记录 `[NekoLua.Astra]` 日志 |
-| Astra < 6.1.0 | 同上，`available=false`；桥接不注册事件类与角色生成器 |
+| Astra 程序集不存在 | `astra` 表存在但 `available=false`；调用报「需要 AstraFramework >= 7.0.0」，并记录 `[NekoLua.Astra]` 日志 |
+| Astra < 7.0.0 | 同上，`available=false`；桥接不注册事件类与角色生成器 |
 | 定义字段非法 | 抛 `ScriptRuntimeException`，错误带字段名 |
 | Id 重复（不同 mod） | 第二个 define 抛异常，提示占用者 |
 | 同 mod 同 Id 重定义 | 替换定义，返回成功 |
@@ -441,7 +442,7 @@ sealed class LuaRoleSpawner : ICustomWaveRoleSpawner
 
 ```lua
 astra.available          -- boolean，桥接可用
-astra.version            -- "6.1.0"（Astra 版本）
+astra.version            -- "7.0.0"（Astra 版本）
 astra.api_version        -- 1
 astra.flush()            -- 手动提交（调试用）
 ```
@@ -513,7 +514,7 @@ sched.reset()
 
 > 3.0 起 `table` 的键可以是自定义角色 Id，也可以是原版 `RoleTypeId` 名；不定 `table` 时由角色侧 `waves` + `wave_count` / `wave_counts` 聚合。
 
-> 6.1+：角色、波次和物品都可以加 `spawn_points`（世界坐标或房间/区域筛选 + 本地坐标）、`min_amount`、`max_spawn_count` 与 `can_spawn`，由 Astra 的 `RoundStartSpawnManager` 在原版分配完成后生成；桥接适配器实现 `ISpawnDefinition` 与 `ISpawnCondition`。字段见 `docs/API-ASTRA.md` §6.4。单个位置表的运行时传送/解析用 `astra.position.teleport/resolve`，见 §12。
+> 7.0+：角色、波次和物品都可以加 `spawn_points`（世界坐标或房间/区域筛选 + 本地坐标）、`min_amount`、`max_spawn_count` 与 `can_spawn`，由 Astra 的 `RoundStartSpawnManager` 在原版分配完成后生成；桥接适配器实现 `ISpawnOnRoundStart`（继承 `ISpawnDefinition`）与 `ISpawnCondition`。字段见 `docs/API-ASTRA.md` §6.4。单个位置表的运行时传送/解析用 `astra.position.teleport/resolve`，见 §12。
 
 ### 7.5 其它 API 分级
 
@@ -580,8 +581,8 @@ end)
 
 | 条件 | 表现 |
 |---|---|
-| Astra 未安装 | NekoLua 正常启动；`astra` 表存在但 `available=false`，调用报“需要 AstraFramework >= 6.1.0” |
-| Astra < 6.1.0 | 同上；桥接不注册事件类与角色生成器，日志明确提示最低版本 |
+| Astra 未安装 | NekoLua 正常启动；`astra` 表存在但 `available=false`，调用报“需要 AstraFramework >= 7.0.0” |
+| Astra < 7.0.0 | 同上；桥接不注册事件类与角色生成器，日志明确提示最低版本 |
 | NekoLua 旧版（无扩展钩子） | 桥接无法被加载（文件不被扫描），无副作用 |
 | 定义冲突（跨 mod） | 后者 define 报错，前者不受影响 |
 | reload 期间 | 定义热替换，玩家角色保留；一帧后确认无重定义才注销 |
@@ -593,7 +594,7 @@ end)
 
 ## 10. 落地路线与验证
 
-> 状态：P0–P4 全部已完成，桥接基线为 Astra 6.1.0。
+> 状态：P0–P4 全部已完成，桥接基线为 Astra 7.0.0。
 
 | 阶段 | 内容 | 验证 |
 |---|---|---|
@@ -619,7 +620,7 @@ print(astra.role.get(p) ~= nil)
 
 **风险**
 
-1. **Astra 上游 API 变动**：桥接编译期绑定 Astra 6.1.0 签名（Entry 模型）；升级需同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与桥接代码，低于下限会直接 `astra.available=false`。
+1. **Astra 上游 API 变动**：桥接编译期绑定 Astra 7.0.0 签名（Entry 模型）；升级需同步 `libs/astra/<版本>`、`MinimumAstraVersion` 与桥接代码，低于下限会直接 `astra.available=false`。
 2. **Initialize 早退**（A4）：只要有人绕过 Flush 提前注册，C# 模板会整体消失；桥接自身守住了时序，但挡不住第三方扩展抢跑。当前未做模板数启动自检，出现时表现为原版 C# 模板消失，需按 Flush 顺序排查。
 3. **注销与玩家实例**：`Unregister` 只清模板，玩家身上的实例要调用方自己摘；桥接已内置，但 C# 侧直接用新 API 的人容易忘。
 4. **程序集不可卸载**：NekoLua 用 `Assembly.Load(byte[])` 装载扩展，DLL 文件不再被锁、运行期可直接覆盖；但已加载的旧代码要重启（或重新启用 NekoLua 插件）才会换新。`OnUnload` 必须把静态状态清干净，`OnLoad` 必须幂等；扩展也不能依赖 `extensions/` 里的其它 DLL。
@@ -628,6 +629,6 @@ print(astra.role.get(p) ~= nil)
 
 **开放问题**
 
-1. **后续 Astra 版本的兼容上限**：桥接只校验最低版本（6.1.0）；角色/波次/物品的回合开始生成已桥接，位置/传送 API 已通过 `astra.position` 暴露，仅剩物品事件（`CustomItem.OnShooting` 等）未桥接；再改 Entry / 注册模型需要重新适配，升级前关注 Astra 发布说明。
+1. **后续 Astra 版本的兼容上限**：桥接只校验最低版本（7.0.0）；角色/波次/物品的回合开始生成已桥接，位置/传送 API 已通过 `astra.position` 暴露，仅剩物品事件（`CustomItem.OnShooting` 等）未桥接；再改 Entry / 注册模型需要重新适配，升级前关注 Astra 发布说明。
 2. **per-wave 角色数量**：目前 `wave_count` 统一值 + `wave_counts` 覆盖；更细粒度取决于 Astra 上游 `IWaveSpawnCountProvider` 的演进（A5）。
 3. **v2 ability / 物品事件**：v1 已明确不做；是否投入取决于玩法是否真的需要按键技能 / 自定义物品行为（各约 +500 行）；物品定义与刷怪点已可用。
