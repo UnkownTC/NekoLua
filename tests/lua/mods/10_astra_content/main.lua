@@ -38,7 +38,9 @@ astra.role.define {
     spawn_points = {
         { x = 0, y = 0, z = 0, yaw = 90 },
     },
+    min_amount = 0,
     max_spawn_count = 0,
+    can_spawn = function() return true end,
     on_added = function(ply)
         storage.set("kit_role_added", true)
     end,
@@ -56,7 +58,9 @@ astra.item.define {
     spawn_points = {
         { x = 0, y = 0, z = 0, probability = 0.5 },
     },
+    min_amount = 0,
     max_spawn_count = 0,
+    can_spawn = function() return true end,
 }
 
 -- 波次
@@ -71,7 +75,9 @@ astra.wave.define {
     spawn_points = {
         { zone = "LightContainment", x = 0, y = 0, z = 0, probability = 0.25 },
     },
+    min_amount = 0,
     max_spawn_count = 0,
+    can_spawn = function() return true end,
 }
 
 local function countWhere(list, idField, expected)

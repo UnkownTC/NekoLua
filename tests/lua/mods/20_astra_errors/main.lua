@@ -70,6 +70,14 @@ kit.command("lua_err", "Astra 桥接负向测试", function()
         })
     end, "probability")
 
+    s:throws("role.define 坏 min_amount", function()
+        astra.role.define({ id = "kit_bad_min", name = "x", min_amount = -1 })
+    end, "min_amount")
+
+    s:throws("role.define 坏 can_spawn", function()
+        astra.role.define({ id = "kit_bad_cond", name = "x", can_spawn = 1 })
+    end, "can_spawn")
+
     s:throws("wave.define 坏房间名", function()
         astra.wave.define({
             id = "kit_bad_room",

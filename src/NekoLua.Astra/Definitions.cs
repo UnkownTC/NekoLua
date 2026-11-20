@@ -52,7 +52,9 @@ internal sealed class RoleDefinition
     public int WaveSpawnCount = 1;
     public Dictionary<string, int>? WaveCounts;
     public SpawnPointSpec[] SpawnPoints = [];
+    public int MinAmount;
     public int MaxSpawnCount;
+    public DynValue? CanSpawn;
     public DynValue? OnAdded;
     public DynValue? OnRemoved;
 }
@@ -73,7 +75,9 @@ internal sealed class WaveDefinition
     public string? AnnouncementTranslation;
     public Dictionary<string, int>? Table;
     public SpawnPointSpec[] SpawnPoints = [];
+    public int MinAmount;
     public int MaxSpawnCount;
+    public DynValue? CanSpawn;
     public DynValue? AllowSpawn;
 }
 
@@ -86,7 +90,9 @@ internal sealed class ItemDefinition
     public string Description = string.Empty;
     public float Weight = -1f;
     public SpawnPointSpec[] SpawnPoints = [];
+    public int MinAmount;
     public int MaxSpawnCount;
+    public DynValue? CanSpawn;
 }
 
 /// <summary>
@@ -141,7 +147,9 @@ internal static class DefinitionParser
             WaveSpawnCount = (int)LuaSpec.OptionalNumber(t, "wave_count", ctx, 1f),
             WaveCounts = LuaSpec.OptionalIntMap(t, "wave_counts", ctx),
             SpawnPoints = spawnPoints,
+            MinAmount = ParseMinAmount(t, ctx),
             MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
+            CanSpawn = LuaSpec.OptionalCallback(t, "can_spawn", ctx),
             OnAdded = LuaSpec.OptionalCallback(t, "on_added", ctx),
             OnRemoved = LuaSpec.OptionalCallback(t, "on_removed", ctx),
         };
@@ -174,7 +182,9 @@ internal static class DefinitionParser
             AnnouncementTranslation = LuaSpec.OptionalString(t, "announcement_translation", ctx),
             Table = LuaSpec.OptionalIntMap(t, "table", ctx),
             SpawnPoints = spawnPoints,
+            MinAmount = ParseMinAmount(t, ctx),
             MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
+            CanSpawn = LuaSpec.OptionalCallback(t, "can_spawn", ctx),
             AllowSpawn = LuaSpec.OptionalCallback(t, "allow_spawn", ctx),
         };
     }
@@ -197,7 +207,9 @@ internal static class DefinitionParser
             Description = LuaSpec.OptionalString(t, "description", ctx) ?? string.Empty,
             Weight = LuaSpec.OptionalNumber(t, "weight", ctx, -1f),
             SpawnPoints = spawnPoints,
+            MinAmount = ParseMinAmount(t, ctx),
             MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
+            CanSpawn = LuaSpec.OptionalCallback(t, "can_spawn", ctx),
         };
     }
 
@@ -260,20 +272,26 @@ internal static class DefinitionParser
         return result;
     }
 
-    private static int ParseMaxSpawnCount(Table t, string ctx, int pointCount)
+    private static int ParseMinAmount(Table t, string ctx) =>
+        ParseNonNegativeInt(t, "min_amount", ctx, 0);
+
+    private static int ParseMaxSpawnCount(Table t, string ctx, int pointCount) =>
+        ParseNonNegativeInt(t, "max_spawn_count", ctx, pointCount);
+
+    private static int ParseNonNegativeInt(Table t, string key, string ctx, int fallback)
     {
-        var value = t.Get("max_spawn_count");
+        var value = t.Get(key);
 
         if (value.IsNil())
-            return pointCount;
+            return fallback;
 
         if (value.Type != DataType.Number)
-            throw LuaSpec.Error(ctx, "max_spawn_count 必须是数字");
+            throw LuaSpec.Error(ctx, $"{key} 必须是数字");
 
         var count = value.Number;
 
         if (double.IsNaN(count) || count < 0 || count > int.MaxValue || Math.Floor(count) != count)
-            throw LuaSpec.Error(ctx, "max_spawn_count 必须是非负整数");
+            throw LuaSpec.Error(ctx, $"{key} 必须是非负整数");
 
         return (int)count;
     }

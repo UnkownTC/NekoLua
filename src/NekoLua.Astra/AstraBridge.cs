@@ -73,8 +73,8 @@ internal static class AstraBridge
 {
     public const int ApiVersion = 1;
 
-    /// <summary>桥接要求的最低 Astra 版本（按 4.0.0 编译并校验此下限；4.0 起上游提供回合开始生成）。</summary>
-    public static readonly Version MinimumAstraVersion = new(4, 0, 0);
+    /// <summary>桥接要求的最低 Astra 版本（按 6.1.0 编译并校验此下限；6.0 起回合开始生成改用 ISpawnDefinition，6.1 增加 ISpawnCondition）。</summary>
+    public static readonly Version MinimumAstraVersion = new(6, 1, 0);
 
     private static readonly Dictionary<string, ContentEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, ModContent> _mods = new(StringComparer.OrdinalIgnoreCase);
@@ -337,6 +337,16 @@ internal static class AstraBridge
         return result.Type == DataType.Boolean && result.Boolean;
     }
 
+    /// <summary>执行无参回合开始条件回调；未提供回调视为允许。</summary>
+    public static bool InvokeCondition(string contentId, DynValue? callback)
+    {
+        if (callback is null || callback.Type != DataType.Function)
+            return true;
+
+        var result = Execute(contentId, callback);
+        return result.Type == DataType.Boolean && result.Boolean;
+    }
+
     public static void EnsureMainThread(string api)
     {
         if (_mainThreadId == 0)
@@ -356,7 +366,7 @@ internal static class AstraBridge
         return color;
     }
 
-    private static DynValue Execute(string contentId, DynValue? callback, Player player)
+    private static DynValue Execute(string contentId, DynValue? callback, Player? player = null)
     {
         if (callback is null || callback.Type != DataType.Function)
             return DynValue.Nil;
@@ -366,7 +376,9 @@ internal static class AstraBridge
 
         try
         {
-            return callback.Function.Call(entry.Owner.Cache.Wrap(player));
+            return player is null
+                ? callback.Function.Call()
+                : callback.Function.Call(entry.Owner.Cache.Wrap(player));
         }
         catch (InterpreterException ex)
         {
