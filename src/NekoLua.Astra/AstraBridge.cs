@@ -73,8 +73,8 @@ internal static class AstraBridge
 {
     public const int ApiVersion = 1;
 
-    /// <summary>桥接要求的最低 Astra 版本（按 7.0.0 编译并校验此下限；7.0 起 ISpawnOnRoundStart 继承 ISpawnDefinition 并承载 MinAmount/MaxSpawnCount）。</summary>
-    public static readonly Version MinimumAstraVersion = new(7, 0, 0);
+    /// <summary>桥接要求的最低 Astra 版本（按 8.0.0 编译并校验此下限；8.0 起 ISpawnOnRoundStart 使用 MinSpawnCount（原 MinAmount）/ MaxSpawnCount）。</summary>
+    public static readonly Version MinimumAstraVersion = new(8, 0, 0);
 
     private static readonly Dictionary<string, ContentEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, ModContent> _mods = new(StringComparer.OrdinalIgnoreCase);

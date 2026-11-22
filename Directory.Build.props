@@ -92,7 +92,7 @@
 
   <!-- 统一版本信息，避免各项目各写一份 -->
   <PropertyGroup>
-    <Version>2.2.0</Version>
+    <Version>2.3.0</Version>
     <Authors>AI-Workspace</Authors>
     <NeutralLanguage>zh-CN</NeutralLanguage>
   </PropertyGroup>

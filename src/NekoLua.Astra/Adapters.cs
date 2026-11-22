@@ -72,7 +72,7 @@ internal sealed class LuaCustomItem : CustomItem, ISpawnOnRoundStart, ISpawnCond
 
     public override float Weight => Def.Weight;
 
-    public int MinAmount => Def.MinAmount;
+    public int MinSpawnCount => Def.MinSpawnCount;
 
     public int MaxSpawnCount => Def.MaxSpawnCount;
 
@@ -187,7 +187,7 @@ internal sealed class LuaCustomRole : CustomRole, IWaveSpawnCountProvider, ISpaw
             : Def.WaveSpawnCount;
     }
 
-    public int MinAmount => Def.MinAmount;
+    public int MinSpawnCount => Def.MinSpawnCount;
 
     public int MaxSpawnCount => Def.MaxSpawnCount;
 
@@ -293,7 +293,7 @@ internal sealed class LuaCustomWave : CustomWave, IWeightedWave, ISpawnOnRoundSt
         return table;
     }
 
-    public int MinAmount => Def.MinAmount;
+    public int MinSpawnCount => Def.MinSpawnCount;
 
     public int MaxSpawnCount => Def.MaxSpawnCount;
 

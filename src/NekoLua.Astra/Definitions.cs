@@ -52,7 +52,7 @@ internal sealed class RoleDefinition
     public int WaveSpawnCount = 1;
     public Dictionary<string, int>? WaveCounts;
     public SpawnPointSpec[] SpawnPoints = [];
-    public int MinAmount;
+    public int MinSpawnCount;
     public int MaxSpawnCount;
     public DynValue? CanSpawn;
     public DynValue? OnAdded;
@@ -75,7 +75,7 @@ internal sealed class WaveDefinition
     public string? AnnouncementTranslation;
     public Dictionary<string, int>? Table;
     public SpawnPointSpec[] SpawnPoints = [];
-    public int MinAmount;
+    public int MinSpawnCount;
     public int MaxSpawnCount;
     public DynValue? CanSpawn;
     public DynValue? AllowSpawn;
@@ -90,7 +90,7 @@ internal sealed class ItemDefinition
     public string Description = string.Empty;
     public float Weight = -1f;
     public SpawnPointSpec[] SpawnPoints = [];
-    public int MinAmount;
+    public int MinSpawnCount;
     public int MaxSpawnCount;
     public DynValue? CanSpawn;
 }
@@ -147,7 +147,7 @@ internal static class DefinitionParser
             WaveSpawnCount = (int)LuaSpec.OptionalNumber(t, "wave_count", ctx, 1f),
             WaveCounts = LuaSpec.OptionalIntMap(t, "wave_counts", ctx),
             SpawnPoints = spawnPoints,
-            MinAmount = ParseMinAmount(t, ctx),
+            MinSpawnCount = ParseMinSpawnCount(t, ctx),
             MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
             CanSpawn = LuaSpec.OptionalCallback(t, "can_spawn", ctx),
             OnAdded = LuaSpec.OptionalCallback(t, "on_added", ctx),
@@ -182,7 +182,7 @@ internal static class DefinitionParser
             AnnouncementTranslation = LuaSpec.OptionalString(t, "announcement_translation", ctx),
             Table = LuaSpec.OptionalIntMap(t, "table", ctx),
             SpawnPoints = spawnPoints,
-            MinAmount = ParseMinAmount(t, ctx),
+            MinSpawnCount = ParseMinSpawnCount(t, ctx),
             MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
             CanSpawn = LuaSpec.OptionalCallback(t, "can_spawn", ctx),
             AllowSpawn = LuaSpec.OptionalCallback(t, "allow_spawn", ctx),
@@ -207,7 +207,7 @@ internal static class DefinitionParser
             Description = LuaSpec.OptionalString(t, "description", ctx) ?? string.Empty,
             Weight = LuaSpec.OptionalNumber(t, "weight", ctx, -1f),
             SpawnPoints = spawnPoints,
-            MinAmount = ParseMinAmount(t, ctx),
+            MinSpawnCount = ParseMinSpawnCount(t, ctx),
             MaxSpawnCount = ParseMaxSpawnCount(t, ctx, spawnPoints.Length),
             CanSpawn = LuaSpec.OptionalCallback(t, "can_spawn", ctx),
         };
@@ -272,7 +272,7 @@ internal static class DefinitionParser
         return result;
     }
 
-    private static int ParseMinAmount(Table t, string ctx) =>
+    private static int ParseMinSpawnCount(Table t, string ctx) =>
         ParseNonNegativeInt(t, "min_amount", ctx, 0);
 
     private static int ParseMaxSpawnCount(Table t, string ctx, int pointCount) =>
